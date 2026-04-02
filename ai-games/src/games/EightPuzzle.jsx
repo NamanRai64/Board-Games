@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
-import { MousePointer2, Bot } from 'lucide-react';
-
-const SOLVED_STATE = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 
 export default function EightPuzzle() {
-  const [board, setBoard] = useState([...SOLVED_STATE]); // Start solved, then user can shuffle or we start shuffled
-  const [mode, setMode] = useState('manual'); // 'manual' or 'agent'
+  const [size, setSize] = useState(3);
+  const [board, setBoard] = useState([]); 
+  const [solved, setSolved] = useState(false);
+  const [mode, setMode] = useState('manual'); 
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
 
-  // Helper to shuffle board
   const getGoal = (s) => {
     const goal = [];
     for (let i = 1; i < s * s; i++) goal.push(i);
@@ -21,6 +19,7 @@ export default function EightPuzzle() {
   const shuffleBoard = () => {
     const goal = getGoal(size);
     let current = [...goal];
+    // Random walk to ensure solvability
     for (let i = 0; i < 200; i++) {
         const idx = current.indexOf(0);
         const neighbors = [];
@@ -44,6 +43,7 @@ export default function EightPuzzle() {
 
   const getManhattan = (curr, targetSize) => {
     let dist = 0;
+    const goal = getGoal(targetSize);
     for (let i = 0; i < curr.length; i++) {
       const val = curr[i];
       if (val !== 0) {
@@ -73,8 +73,8 @@ export default function EightPuzzle() {
     const scored = moves.map(m => {
         const nextBoard = [...board];
         [nextBoard[idx], nextBoard[m.to]] = [nextBoard[m.to], nextBoard[idx]];
-        const score = getManhattan(nextBoard, size); // lower is better
-        return { move: m, score: -score }; // negate to make higher better for topNRandom
+        const score = getManhattan(nextBoard, size);
+        return { move: m, score: -score }; 
     });
 
     const result = topNRandom(scored, 3);
@@ -98,41 +98,18 @@ export default function EightPuzzle() {
     if (mode === 'agent' && isAuto && !solved) {
       timeout = setTimeout(() => {
         performAgentMove();
-      }, 300); // Faster for 8-puzzle
+      }, size === 3 ? 300 : 150); 
     }
     return () => clearTimeout(timeout);
-  }, [mode, isAuto, board]);
+  }, [mode, isAuto, board, solved, size]);
 
   const handleTileClick = (idx) => {
     if (mode === 'agent' || solved || isAuto) return;
     const emptyIdx = board.indexOf(0);
-    const validMoves = getValidMoves(board);
-    if (validMoves.includes(idx)) {
-      setBoard(applyMove(board, idx));
-    }
-  };
-
-  const solved = isSolved(board);
-  const statusMsg = solved ? 'Puzzle Solved!' : 'In Progress';
-  const statusType = solved ? 'win' : '';
-
-  const getValidMoves = (currentBoard, targetSize) => {
-    const emptyIdx = currentBoard.indexOf(0);
-    const validMoves = [];
-    const r = Math.floor(emptyIdx / targetSize);
-    const c = emptyIdx % targetSize;
-    if (r > 0) validMoves.push(emptyIdx - targetSize); 
-    if (r < targetSize - 1) validMoves.push(emptyIdx + targetSize); 
-    if (c > 0) validMoves.push(emptyIdx - 1); 
-    if (c < targetSize - 1) validMoves.push(emptyIdx + 1); 
-    return validMoves;
-  };
-
-  const handleTileClick = (idx) => {
-    if (mode === 'agent' || solved || isAuto) return;
-    const valid = getValidMoves(board, size);
-    if (valid.includes(idx)) {
-      const emptyIdx = board.indexOf(0);
+    const r = Math.floor(idx / size), c = idx % size;
+    const er = Math.floor(emptyIdx / size), ec = emptyIdx % size;
+    
+    if (Math.abs(r - er) + Math.abs(c - ec) === 1) {
       const nextBoard = [...board];
       [nextBoard[emptyIdx], nextBoard[idx]] = [nextBoard[idx], nextBoard[emptyIdx]];
       setBoard(nextBoard);
@@ -140,11 +117,12 @@ export default function EightPuzzle() {
     }
   };
 
-  let statusMsg = solved ? 'Puzzle Solved!' : `Moves away: ${getManhattan(board, size)}`;
+  const currentDist = getManhattan(board, size);
+  let statusMsg = solved ? 'Puzzle Solved!' : `Current Distance: ${currentDist}`;
   let statusType = solved ? 'win' : 'thinking';
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Sliding Puzzle</h2>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -165,7 +143,16 @@ export default function EightPuzzle() {
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 70px)`, width: 'fit-content' }}>
+      <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: `repeat(${size}, 70px)`, 
+          gap: '4px',
+          padding: '4px',
+          background: 'var(--color-panel-border)',
+          borderRadius: '8px',
+          margin: '0 auto',
+          width: 'fit-content'
+      }}>
         {board.map((tile, idx) => (
           <button 
             key={idx} 
