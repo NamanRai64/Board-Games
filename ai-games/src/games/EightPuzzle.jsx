@@ -116,13 +116,13 @@ export default function EightPuzzle() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-neon-amber)', marginBottom: '20px', textAlign: 'center' }}>8-Puzzle</h2>
+      <h2 style={{ color: 'var(--color-accent)', marginBottom: '20px', textAlign: 'center' }}>8-Puzzle</h2>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button className={`btn ${mode === 'manual' ? 'btn-green' : ''}`} onClick={() => setMode('manual')}>
+        <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>
           <MousePointer2 size={18} className="inline-icon" /> Manual
         </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-green' : ''}`} onClick={() => setMode('agent')}>
+        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
           <Bot size={18} className="inline-icon" /> Agent Solve
         </button>
       </div>
@@ -144,7 +144,7 @@ export default function EightPuzzle() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button className="btn btn-cyan" onClick={shuffleBoard}>Shuffle Board</button>
+        <button className="btn btn-secondary" onClick={shuffleBoard}>Shuffle Board</button>
       </div>
 
       {mode === 'agent' && (
