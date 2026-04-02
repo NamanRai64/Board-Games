@@ -116,22 +116,56 @@ export default function EightPuzzle() {
   const statusMsg = solved ? 'Puzzle Solved!' : 'In Progress';
   const statusType = solved ? 'win' : '';
 
+  const getValidMoves = (currentBoard, targetSize) => {
+    const emptyIdx = currentBoard.indexOf(0);
+    const validMoves = [];
+    const r = Math.floor(emptyIdx / targetSize);
+    const c = emptyIdx % targetSize;
+    if (r > 0) validMoves.push(emptyIdx - targetSize); 
+    if (r < targetSize - 1) validMoves.push(emptyIdx + targetSize); 
+    if (c > 0) validMoves.push(emptyIdx - 1); 
+    if (c < targetSize - 1) validMoves.push(emptyIdx + 1); 
+    return validMoves;
+  };
+
+  const handleTileClick = (idx) => {
+    if (mode === 'agent' || solved || isAuto) return;
+    const valid = getValidMoves(board, size);
+    if (valid.includes(idx)) {
+      const emptyIdx = board.indexOf(0);
+      const nextBoard = [...board];
+      [nextBoard[emptyIdx], nextBoard[idx]] = [nextBoard[idx], nextBoard[emptyIdx]];
+      setBoard(nextBoard);
+      if (JSON.stringify(nextBoard) === JSON.stringify(getGoal(size))) setSolved(true);
+    }
+  };
+
+  let statusMsg = solved ? 'Puzzle Solved!' : `Moves away: ${getManhattan(board, size)}`;
+  let statusType = solved ? 'win' : 'thinking';
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>8-Puzzle</h2>
+      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Sliding Puzzle</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
-        <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>
-          <MousePointer2 size={16} /> Manual
-        </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={16} /> Agent Solve
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>
+            Manual
+          </button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
+             Agent
+          </button>
+        </div>
+        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
+          <button className={`btn ${size === 3 ? 'btn-secondary' : ''}`} onClick={() => setSize(3)}>3x3</button>
+          <button className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
+        </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ gridTemplateColumns: 'repeat(3, 80px)', width: 'fit-content' }}>
+      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 70px)`, width: 'fit-content' }}>
         {board.map((tile, idx) => (
           <button 
             key={idx} 
@@ -141,7 +175,8 @@ export default function EightPuzzle() {
             style={{ 
               opacity: tile === 0 ? 0 : 1, 
               color: 'var(--color-link)',
-              fontSize: '1.5rem'
+              fontSize: size === 3 ? '1.5rem' : '1.2rem',
+              width: '70px', height: '70px'
             }}
           >
             {tile}
@@ -150,7 +185,7 @@ export default function EightPuzzle() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '24px' }}>
-        <button className="btn" onClick={shuffleBoard}>Shuffle Board</button>
+        <button className="btn" onClick={shuffleBoard}>Shuffle & New Game</button>
       </div>
 
       {mode === 'agent' && (
