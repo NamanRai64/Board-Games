@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
 import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
 const SIZE = 8;
@@ -10,6 +10,7 @@ export default function NQueens() {
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [hintCol, setHintCol] = useState(null);
+  const [warningMsg, setWarningMsg] = useState('');
 
   const isSafe = (testBoard, row, col) => {
     for (let r = 0; r < row; r++) {
@@ -94,7 +95,7 @@ export default function NQueens() {
       setHintCol(null);
       setAgentLogs(null);
     } else {
-      alert("Invalid placement! Conflict detected.");
+      setWarningMsg("Invalid placement! Conflict detected.");
     }
   };
 
@@ -123,13 +124,14 @@ export default function NQueens() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-neon-green)', marginBottom: '20px', textAlign: 'center' }}>N-Queens</h2>
+      <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
+      <h2 style={{ color: 'var(--color-primary)', marginBottom: '20px', textAlign: 'center' }}>N-Queens</h2>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button className={`btn ${mode === 'manual' ? 'btn-green' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
+        <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
           <MousePointer2 size={18} className="inline-icon" /> Manual
         </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-green' : ''}`} onClick={() => setMode('agent')}>
+        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
           <Bot size={18} className="inline-icon" /> Agent Solve
         </button>
       </div>
@@ -157,10 +159,10 @@ export default function NQueens() {
                 key={`${r}-${c}`}
                 style={{ 
                   width: '40px', height: '40px',
-                  backgroundColor: isPlaced ? 'var(--color-neon-green)' : 
-                                   isHint ? 'var(--color-neon-amber)' : 
+                  backgroundColor: isPlaced ? 'var(--color-primary)' : 
+                                   isHint ? 'var(--color-accent)' : 
                                    isDark ? '#222' : '#444',
-                  border: isHint ? '2px solid var(--color-neon-yellow)' : '1px solid #111',
+                  border: isHint ? '2px solid var(--color-secondary)' : '1px solid #111',
                   cursor: isClickableRow ? 'pointer' : 'default',
                   color: '#000',
                   fontWeight: 'bold',
@@ -179,10 +181,10 @@ export default function NQueens() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '20px', gap: '10px', display: 'flex', justifyContent: 'center' }}>
-        <button className="btn btn-cyan" onClick={resetGame}>Restart</button>
+        <button className="btn btn-secondary" onClick={resetGame}>Restart</button>
         {mode === 'manual' && board.length > 0 && <button className="btn" onClick={undoMove}>Undo</button>}
         {mode === 'manual' && !isSolved && !isDeadEnd && (
-          <button className="btn btn-amber" onClick={provideHint}>
+          <button className="btn btn-primary" onClick={provideHint}>
             <Lightbulb size={18} className="inline-icon" /> Hint
           </button>
         )}
