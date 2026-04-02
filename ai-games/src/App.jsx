@@ -1,121 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState } from 'react';
+import TicTacToe from './games/TicTacToe';
+import EightPuzzle from './games/EightPuzzle';
+import NQueens from './games/NQueens';
+import Wumpus from './games/Wumpus';
+import MapColoring from './games/MapColoring';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeGame, setActiveGame] = useState('tictactoe');
+
+  const games = [
+    { id: 'tictactoe', name: 'Tic-Tac-Toe', component: <TicTacToe /> },
+    { id: 'eightpuzzle', name: '8-Puzzle', component: <EightPuzzle /> },
+    { id: 'nqueens', name: 'N-Queens', component: <NQueens /> },
+    { id: 'wumpus', name: 'Wumpus World', component: <Wumpus /> },
+    { id: 'mapcoloring', name: 'Map Coloring', component: <MapColoring /> },
+  ];
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        background: 'rgba(5, 5, 5, 0.9)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid var(--color-panel-border)',
+        padding: '15px 20px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '20px',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <h1 style={{ color: 'var(--color-neon-amber)', margin: 0, fontSize: '1.5rem', marginRight: '20px' }}>AI Arcade</h1>
+        
+        <nav style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {games.map(game => (
+            <button
+              key={game.id}
+              className={`btn ${activeGame === game.id ? 'btn-green' : ''}`}
+              onClick={() => setActiveGame(game.id)}
+            >
+              {game.name}
+            </button>
+          ))}
+        </nav>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      <main style={{ padding: '20px' }}>
+        {games.find(g => g.id === activeGame)?.component}
+      </main>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
