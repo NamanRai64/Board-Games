@@ -169,13 +169,13 @@ export default function Wumpus() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 style={{ color: 'var(--color-neon-green)', marginBottom: '20px' }}>Wumpus World</h2>
+      <h2 style={{ color: 'var(--color-primary)', marginBottom: '20px' }}>Wumpus World</h2>
       
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button className={`btn ${mode === 'manual' ? 'btn-green' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
+        <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
           <MousePointer2 size={18} className="inline-icon" /> Manual
         </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-green' : ''}`} onClick={() => setMode('agent')}>
+        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
           <Bot size={18} className="inline-icon" /> Agent Solve
         </button>
       </div>
@@ -218,7 +218,7 @@ export default function Wumpus() {
                   style={{ 
                     width: '60px', height: '60px',
                     backgroundColor: hasVisited ? 'var(--color-bg)' : '#333',
-                    border: IsHint ? '3px solid var(--color-neon-amber)' : '1px solid #111',
+                    border: IsHint ? '3px solid var(--color-accent)' : '1px solid #111',
                     cursor: Clickable ? 'pointer' : 'default',
                     fontSize: '24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -236,16 +236,16 @@ export default function Wumpus() {
 
         <div className="glass-panel" style={{ width: '200px' }}>
           <h4 style={{ color: 'var(--color-text-main)', marginBottom: '10px' }}>Sensors (Current Pos)</h4>
-          <div style={{ color: currentSensors.stench ? 'var(--color-neon-red)' : 'var(--color-text-muted)' }}>Stench: {currentSensors.stench ? 'YES' : 'NO'}</div>
-          <div style={{ color: currentSensors.breeze ? 'var(--color-neon-cyan)' : 'var(--color-text-muted)' }}>Breeze: {currentSensors.breeze ? 'YES' : 'NO'}</div>
-          <div style={{ color: currentSensors.glitter ? 'var(--color-neon-amber)' : 'var(--color-text-muted)' }}>Glitter: {currentSensors.glitter ? 'YES' : 'NO'}</div>
+          <div style={{ color: currentSensors.stench ? 'var(--color-alert)' : 'var(--color-text-muted)' }}>Stench: {currentSensors.stench ? 'YES' : 'NO'}</div>
+          <div style={{ color: currentSensors.breeze ? 'var(--color-secondary)' : 'var(--color-text-muted)' }}>Breeze: {currentSensors.breeze ? 'YES' : 'NO'}</div>
+          <div style={{ color: currentSensors.glitter ? 'var(--color-accent)' : 'var(--color-text-muted)' }}>Glitter: {currentSensors.glitter ? 'YES' : 'NO'}</div>
         </div>
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '20px', display: 'flex', gap: '10px' }}>
-        <button className="btn btn-cyan" onClick={resetGame}>Restart</button>
+        <button className="btn btn-secondary" onClick={resetGame}>Restart</button>
         {mode === 'manual' && !status && (
-          <button className="btn btn-amber" onClick={provideHint}>
+          <button className="btn btn-primary" onClick={provideHint}>
             <Lightbulb size={18} className="inline-icon" /> Hint
           </button>
         )}
