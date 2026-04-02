@@ -156,7 +156,7 @@ export default function MapColoring() {
   };
 
   const resetGame = () => {
-    setBoard(Array(5).fill(null));
+    setBoard(Array(nodes.length).fill(null));
     setIsP1Next(true);
     setAgentLogs(null);
     setIsAuto(false);
@@ -175,32 +175,39 @@ export default function MapColoring() {
   let statusType = isComplete ? 'win' : hasDeadEnd ? 'lose' : 'thinking';
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
       <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Map Coloring (CSP)</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
-        <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
-          <Users size={16} /> 2 Player
-        </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={16} /> Agent vs Auto
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
+            2 Player
+          </button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
+             Agent
+          </button>
+        </div>
+        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
+          {['easy', 'medium', 'hard'].map(l => (
+             <button key={l} className={`btn ${level === l ? 'btn-secondary' : ''}`} onClick={() => setLevel(l)}>{l.toUpperCase()}</button>
+          ))}
+        </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div style={{ position: 'relative', width: '350px', height: '300px', margin: '40px auto', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--color-panel-border)' }}>
+      <div style={{ position: 'relative', width: '400px', height: '350px', margin: '40px auto', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--color-panel-border)', overflow: 'hidden' }}>
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-          {EDGES.map((edge, idx) => {
-            const A = NODES[edge[0]];
-            const B = NODES[edge[1]];
+          {edges.map((edge, idx) => {
+            const A = nodes[edge[0]];
+            const B = nodes[edge[1]];
             return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-panel-border)" strokeWidth="2" />;
           })}
         </svg>
 
-        {/* Draw Nodes */}
-        {NODES.map(n => {
+        {nodes.map(n => {
           const isSelected = selectedNode === n.id;
           const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'var(--color-bg)';
           return (
@@ -209,8 +216,8 @@ export default function MapColoring() {
               onClick={() => handleNodeClick(n.id)}
               style={{
                 position: 'absolute',
-                left: n.x - 20, top: n.y - 20,
-                width: '40px', height: '40px',
+                left: n.x - 18, top: n.y - 18,
+                width: '36px', height: '36px',
                 borderRadius: '50%',
                 background: bg,
                 border: isSelected ? '2px solid var(--color-link)' : '1px solid var(--color-panel-border)',
@@ -218,7 +225,7 @@ export default function MapColoring() {
                 cursor: (board[n.id] === null && mode === '2player') ? 'pointer' : 'default',
                 color: board[n.id] !== null ? '#fff' : 'var(--color-text-main)',
                 fontWeight: 'bold', zIndex: 10,
-                boxShadow: isSelected ? '0 0 10px rgba(88, 166, 255, 0.3)' : 'none'
+                fontSize: '12px'
               }}
             >
               {n.label}
@@ -229,7 +236,7 @@ export default function MapColoring() {
 
       {mode === '2player' && selectedNode !== null && (
         <div className="glass-panel" style={{ textAlign: 'center', marginBottom: '24px', backgroundColor: 'var(--color-bg)' }}>
-          <h4 style={{ marginBottom: '12px' }}>Choose a color for Region {NODES[selectedNode].label}</h4>
+          <h4 style={{ marginBottom: '12px' }}>Choose a color for Region {nodes[selectedNode].label}</h4>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
             {COLORS.map((c, idx) => {
               const isValid = getValidColors(board, selectedNode).includes(idx);
