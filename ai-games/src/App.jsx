@@ -9,11 +9,11 @@ function App() {
   const [activeGame, setActiveGame] = useState(null);
 
   const games = [
-    { id: 'tictactoe', name: 'Tic-Tac-Toe', desc: 'Minimax algorithm in action.', component: <TicTacToe /> },
-    { id: 'eightpuzzle', name: '8-Puzzle', desc: 'Manhattan heuristic solving.', component: <EightPuzzle /> },
-    { id: 'nqueens', name: 'N-Queens', desc: 'Backtracking with hints.', component: <NQueens /> },
-    { id: 'wumpus', name: 'Wumpus World', desc: 'Reactive semantic agent.', component: <Wumpus /> },
-    { id: 'mapcoloring', name: 'Map Coloring', desc: 'Constraint satisfaction using LCV.', component: <MapColoring /> },
+    { id: 'tictactoe', name: 'Tic-Tac-Toe', desc: 'Minimax on 3x3 or 4x4 boards.', img: '/assets/tictactoe.png', component: <TicTacToe /> },
+    { id: 'eightpuzzle', name: '8-Puzzle', desc: 'Classic 3x3 sliding challenge.', img: '/assets/eightpuzzle.png', component: <EightPuzzle /> },
+    { id: 'nqueens', name: 'N-Queens', desc: 'Scale from 4x4 up to 12x12.', img: '/assets/nqueens.png', component: <NQueens /> },
+    { id: 'wumpus', name: 'Wumpus World', desc: 'Scale from 4x4 up to 8x8 caverns.', img: '/assets/wumpus.png', component: <Wumpus /> },
+    { id: 'mapcoloring', name: 'Map Coloring', desc: 'Easy to Hard graph topologies.', img: '/assets/mapcoloring.png', component: <MapColoring /> },
   ];
 
   return (
