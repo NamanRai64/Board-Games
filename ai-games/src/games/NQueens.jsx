@@ -121,43 +121,53 @@ export default function NQueens() {
   let statusType = isSolved ? 'win' : isDeadEnd ? 'lose' : 'thinking';
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
       <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>N-Queens</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
-        <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
-          <Users size={16} /> Manual
-        </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={16} /> Agent Solve
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
+            Manual
+          </button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
+             Agent
+          </button>
+        </div>
+        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Size (N):</span>
+          {[4, 6, 8, 10, 12].map(n => (
+             <button key={n} className={`btn ${size === n ? 'btn-secondary' : ''}`} onClick={() => { setSize(n); resetGame(); }}>{n}</button>
+          ))}
+        </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: `repeat(${SIZE}, 42px)`, 
+        gridTemplateColumns: `repeat(${size}, minmax(30px, 40px))`, 
         gap: '2px',
         justifyContent: 'center',
         margin: '24px 0',
         backgroundColor: 'var(--color-panel-border)',
         padding: '2px',
-        borderRadius: '6px'
+        borderRadius: '6px',
+        overflowX: 'auto'
       }}>
-        {Array.from({ length: SIZE }).map((_, r) => (
-          Array.from({ length: SIZE }).map((__, c) => {
+        {Array.from({ length: size }).map((_, r) => (
+          Array.from({ length: size }).map((__, c) => {
             const isPlaced = board[r] === c;
             const isClickableRow = mode === 'manual' && r === board.length;
             const isHint = hintCol !== null && isClickableRow && c === hintCol;
             const isDark = (r + c) % 2 === 1;
+            const cellSize = size > 8 ? '30px' : '40px';
 
             return (
               <button 
                 key={`${r}-${c}`}
                 style={{ 
-                  width: '40px', height: '40px',
+                  width: cellSize, height: cellSize,
                   backgroundColor: isPlaced ? 'var(--color-primary)' : 
                                    isHint ? 'rgba(210, 153, 34, 0.4)' : 
                                    isDark ? 'var(--color-bg)' : 'var(--color-panel)',
@@ -165,13 +175,12 @@ export default function NQueens() {
                   cursor: isClickableRow ? 'pointer' : 'default',
                   color: isPlaced ? '#fff' : 'var(--color-link)',
                   fontWeight: 'bold',
-                  fontSize: '20px',
+                  fontSize: size > 8 ? '14px' : '20px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   borderRadius: '2px'
                 }}
                 onClick={() => handleCellClick(r, c)}
                 disabled={!isClickableRow}
-                title={isHint ? "Hint: Suggested placement" : ""}
               >
                 {isPlaced ? '♛' : null}
               </button>
@@ -185,7 +194,7 @@ export default function NQueens() {
         {mode === 'manual' && board.length > 0 && <button className="btn" onClick={undoMove}>Undo</button>}
         {mode === 'manual' && !isSolved && !isDeadEnd && (
           <button className="btn btn-secondary" style={{ color: 'var(--color-warning)' }} onClick={provideHint}>
-            <Lightbulb size={16} /> Hint
+            Hint
           </button>
         )}
       </div>
