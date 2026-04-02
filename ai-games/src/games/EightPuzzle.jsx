@@ -160,9 +160,33 @@ export default function EightPuzzle() {
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${size}, 1fr)`, gap: '8px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--color-border)', margin: '0 auto', maxWidth: '360px' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: `repeat(${size}, 70px)`, 
+        width: `${size * 78}px`,
+        gap: '8px', 
+        padding: '12px', 
+        background: 'rgba(255,255,255,0.03)', 
+        borderRadius: '16px', 
+        border: '1px solid var(--color-border)', 
+        margin: '0 auto', 
+        justifyContent: 'center'
+      }}>
         {board.map((tile, idx) => (
-          <button key={idx} className={`cell ${tile === 0 ? 'empty' : ''}`} onClick={() => handleTileClick(idx)} disabled={tile === 0 || solved || isAuto} style={{ opacity: tile === 0 ? 0 : 1, color: 'var(--color-link)', fontSize: '2rem', minHeight: '80px', background: 'rgba(59, 130, 246, 0.05)', fontWeight: 700 }}>
+          <button 
+            key={idx} 
+            className={`cell ${tile === 0 ? 'empty' : ''}`} 
+            onClick={() => handleTileClick(idx)} 
+            disabled={tile === 0 || solved || isAuto} 
+            style={{ 
+              opacity: tile === 0 ? 0 : 1, 
+              color: 'var(--color-link)', 
+              fontSize: '1.8rem', 
+              width: '70px',
+              height: '70px',
+              background: 'rgba(59, 130, 246, 0.05)', 
+              fontWeight: 700 
+            }}>
             {tile}
           </button>
         ))}

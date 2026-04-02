@@ -171,15 +171,30 @@ export default function TicTacToe() {
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 1fr)`, width: '100%', maxWidth: '360px', margin: '0 auto' }}>
+      <div className="board-grid" style={{ 
+        display: 'grid',
+        gridTemplateColumns: `repeat(${size}, 80px)`, 
+        width: `${size * 90}px`, // Fixed width based on size
+        margin: '0 auto',
+        padding: '12px',
+        gap: '10px',
+        justifyContent: 'center'
+      }}>
         {board.map((cell, idx) => (
           <button 
             key={idx} 
             className={`cell ${cell ? 'active' : ''}`} 
             onClick={() => handleCellClick(idx)} 
             disabled={!!winner || (mode === 'agent' && isAuto) || (mode === 'pva' && !isXNext)} 
-            style={{ fontSize: size === 3 ? '2.5rem' : '2rem' }}>
-            {cell === 'X' ? <span style={{ color: 'var(--color-link)', filter: 'drop-shadow(0 0 8px var(--color-glow-link))' }}>X</span> : cell === 'O' ? <span style={{ color: 'var(--color-alert)', filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))' }}>O</span> : null}
+            style={{ 
+              fontSize: size === 3 ? '2.5rem' : '1.8rem',
+              width: '80px',
+              height: '80px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+            {cell === 'X' ? <span style={{ color: 'var(--color-link)', filter: 'drop-shadow(0 0 8px var(--color-glow-link))', lineHeight: 1 }}>X</span> : cell === 'O' ? <span style={{ color: 'var(--color-alert)', filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))', lineHeight: 1 }}>O</span> : null}
           </button>
         ))}
       </div>

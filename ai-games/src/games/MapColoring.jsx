@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup, SessionStats } from '../components';
 
 const LEVELS = {
   easy: {
@@ -44,18 +44,19 @@ const LEVELS = {
   }
 };
 
-const COLORS = ['#58a6ff', '#238636', '#da3633', '#d29922']; // blue, green, red, yellow
+const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f59e0b']; // blue, emerald, rose, amber
 
 export default function MapColoring() {
   const [level, setLevel] = useState('easy');
   const { nodes, edges } = LEVELS[level];
   const [board, setBoard] = useState(Array(LEVELS[level].nodes.length).fill(null)); 
   const [isP1Next, setIsP1Next] = useState(true);
-  const [mode, setMode] = useState('2player'); // '2player', 'pva', 'agent'
+  const [mode, setMode] = useState('2player'); 
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [warningMsg, setWarningMsg] = useState('');
+  const [stats, setStats] = useState({ wins: 0, losses: 0, draws: 0 });
 
   const getNeighbors = useCallback((nId) => {
     return edges.filter(e => e.includes(nId)).map(e => e[0] === nId ? e[1] : e[0]);
@@ -74,10 +75,8 @@ export default function MapColoring() {
   const calculateAgentMoves = useCallback(() => {
     const uncolored = board.findIndex(c => c === null);
     if (uncolored === -1) return null; 
-
     const validColorsForNode = getValidColors(board, uncolored);
     if (validColorsForNode.length === 0) return null; 
-
     const scoredMoves = validColorsForNode.map(colorIdx => {
       const tempBoard = [...board];
       tempBoard[uncolored] = colorIdx;
@@ -90,16 +89,11 @@ export default function MapColoring() {
       }
       return { move: { node: uncolored, color: colorIdx }, score };
     });
-
     return topNRandom(scoredMoves, 5);
   }, [board, getNeighbors, getValidColors, countOptionsForNeighbor]);
 
   const performAgentMove = useCallback(() => {
-    if (!board.includes(null)) {
-      setIsAuto(false);
-      return;
-    }
-
+    if (!board.includes(null)) { setIsAuto(false); return; }
     const result = calculateAgentMoves();
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
@@ -111,7 +105,7 @@ export default function MapColoring() {
       });
       setIsP1Next(prev => !prev);
     } else {
-      setAgentLogs({ error: "Dead End reached. No valid colors.", sorted: [] });
+      setAgentLogs({ error: "Dead End reached. Potential Conflict.", sorted: [] });
       setIsAuto(false);
     }
   }, [calculateAgentMoves, board]);
@@ -124,11 +118,12 @@ export default function MapColoring() {
     setSelectedNode(null);
   }, [level]);
 
-  useEffect(() => {
-    resetGame();
-  }, [resetGame]);
+  useEffect(() => { resetGame(); }, [resetGame]);
 
-  // PVA Logic: Automatic agent turn
+  useEffect(() => {
+    if (!board.includes(null) && board.length > 0) setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
+  }, [board]);
+
   useEffect(() => {
     if (mode === 'pva' && !isP1Next && board.includes(null)) {
       const timeout = setTimeout(() => performAgentMove(), 600);
@@ -137,11 +132,9 @@ export default function MapColoring() {
   }, [mode, isP1Next, board, performAgentMove]);
 
   useEffect(() => {
-    let timeout;
-    if (mode === 'agent' && isAuto && board.includes(null)) {
-      timeout = setTimeout(() => performAgentMove(), 600);
-    }
-    return () => clearTimeout(timeout);
+    let t;
+    if (mode === 'agent' && isAuto && board.includes(null)) t = setTimeout(() => performAgentMove(), 600);
+    return () => clearTimeout(t);
   }, [mode, isAuto, board, performAgentMove]);
 
   const handleNodeClick = (nId) => {
@@ -154,10 +147,9 @@ export default function MapColoring() {
     if (selectedNode === null) return;
     const valid = getValidColors(board, selectedNode);
     if (!valid.includes(colorIdx)) {
-      setWarningMsg("Invalid color! Neighbor uses this already.");
+      setWarningMsg("Collision Alert! Neighbor uses this frequency.");
       return;
     }
-
     setBoard(prev => {
       const next = [...prev];
       next[selectedNode] = colorIdx;
@@ -165,113 +157,72 @@ export default function MapColoring() {
     });
     setIsP1Next(prev => !prev);
     setSelectedNode(null);
-    setAgentLogs(null);
   };
 
   const isComplete = !board.includes(null);
-  let hasDeadEnd = false;
-  if (!isComplete && board.some((val, idx) => val === null && getValidColors(board, idx).length === 0)) {
-    hasDeadEnd = true;
-  }
+  const hasDeadEnd = !isComplete && board.some((val, idx) => val === null && getValidColors(board, idx).length === 0);
 
-  let statusMsg = isComplete ? 'Map Colored Successfully!' :
-                  hasDeadEnd ? 'Dead End! Cannot finish.' :
-                  `Turn: Player ${isP1Next ? '1' : '2'}`;
-  let statusType = isComplete ? 'win' : hasDeadEnd ? 'lose' : 'thinking';
+  const statusMsg = isComplete ? 'Matrix Harmonized! (Solved)' : hasDeadEnd ? 'System Critical: Conflict State' : `Turn: Player ${isP1Next ? '1' : '2'}`;
+  const statusType = isComplete ? 'win' : hasDeadEnd ? 'lose' : 'thinking';
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
-      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Map Coloring (CSP)</h2>
+      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>Map Coloring</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <SessionStats stats={stats} />
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>PvP</button>
           <button className={`btn ${mode === 'pva' ? 'btn-primary' : ''}`} onClick={() => setMode('pva')}>vs Agent</button>
           <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
-          {['easy', 'medium', 'hard'].map(l => (
-             <button key={l} className={`btn ${level === l ? 'btn-secondary' : ''}`} onClick={() => setLevel(l)}>{l.toUpperCase()}</button>
-          ))}
+        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
+          {['easy', 'medium', 'hard'].map(l => <button key={l} className={`btn ${level === l ? 'btn-secondary' : ''}`} onClick={() => setLevel(l)}>{l.toUpperCase()}</button>)}
         </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div style={{ position: 'relative', width: '400px', height: '350px', margin: '40px auto', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--color-panel-border)', overflow: 'hidden' }}>
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+      <div className="glass-panel" style={{ position: 'relative', width: '100%', maxWidth: '440px', height: '380px', margin: '40px auto', overflow: 'hidden', padding: 0 }}>
+        <svg style={{ position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none' }}>
           {edges.map((edge, idx) => {
-            const A = nodes[edge[0]];
-            const B = nodes[edge[1]];
-            return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-panel-border)" strokeWidth="2" />;
+            const A = nodes[edge[0]], B = nodes[edge[1]];
+            return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-border)" strokeWidth="2" strokeOpacity="0.5" />;
           })}
         </svg>
-
         {nodes.map(n => {
           const isSelected = selectedNode === n.id;
-          const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'var(--color-bg)';
-          const clickable = (board[n.id] === null && (mode === '2player' || (mode === 'pva' && isP1Next)));
+          const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'rgba(255,255,255,0.02)';
+          const active = (board[n.id] === null && (mode === '2player' || (mode === 'pva' && isP1Next)));
           return (
-            <div 
-              key={n.id}
-              onClick={() => handleNodeClick(n.id)}
-              style={{
-                position: 'absolute',
-                left: n.x - 18, top: n.y - 18,
-                width: '36px', height: '36px',
-                borderRadius: '50%',
-                background: bg,
-                border: isSelected ? '2px solid var(--color-link)' : '1px solid var(--color-panel-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: clickable ? 'pointer' : 'default',
-                color: board[n.id] !== null ? '#fff' : 'var(--color-text-main)',
-                fontWeight: 'bold', zIndex: 10,
-                fontSize: '12px'
-              }}
-            >
-              {n.label}
+            <div key={n.id} onClick={() => handleNodeClick(n.id)} style={{ position: 'absolute', left: n.x - 20, top: n.y - 20, width: '40px', height: '40px', borderRadius: '50%', background: bg, border: isSelected ? '2px solid var(--color-link)' : '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: active ? 'pointer' : 'default', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 10, boxShadow: board[n.id] !== null ? `0 0 15px ${bg}88` : 'none' }}>
+              <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: board[n.id] !== null ? '#fff' : 'var(--color-text-muted)' }}>{n.label}</span>
             </div>
           );
         })}
       </div>
 
       {(mode === '2player' || mode === 'pva') && selectedNode !== null && (
-        <div className="glass-panel" style={{ textAlign: 'center', marginBottom: '24px', backgroundColor: 'var(--color-bg)' }}>
-          <h4 style={{ marginBottom: '12px' }}>Choose a color for Region {nodes[selectedNode].label}</h4>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h4 style={{ marginBottom: '16px', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Harmonize Region {nodes[selectedNode].label}</h4>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
             {COLORS.map((c, idx) => {
-              const isValid = getValidColors(board, selectedNode).includes(idx);
-              return (
-                <button 
-                  key={idx} 
-                  style={{ width: '32px', height: '32px', background: c, borderRadius: '50%', opacity: isValid ? 1 : 0.15, cursor: isValid ? 'pointer' : 'not-allowed', border: '2px solid transparent' }}
-                  className={isValid ? 'color-dot-active' : ''}
-                  onClick={() => selectColor(idx)}
-                  disabled={!isValid}
-                />
-              );
+              const valid = getValidColors(board, selectedNode).includes(idx);
+              return <button key={idx} style={{ width: '42px', height: '42px', background: c, borderRadius: '50%', opacity: valid ? 1 : 0.1, cursor: valid ? 'pointer' : 'not-allowed', border: 'none', boxShadow: valid ? `0 0 10px ${c}55` : 'none' }} className={valid ? 'color-dot-active' : ''} onClick={() => selectColor(idx)} disabled={!valid} />;
             })}
           </div>
         </div>
       )}
 
-      <div style={{ textAlign: 'center', marginTop: '24px' }}>
-        <button className="btn" onClick={resetGame}>Restart Game</button>
+      <div style={{ textAlign: 'center', marginTop: '32px' }}>
+        <button className="btn" style={{ padding: '12px 32px' }} onClick={resetGame}>Restart Session</button>
       </div>
 
-      <div style={{ width: '100%' }}>
-        {(mode === 'agent' || mode === 'pva' || (mode === '2player' && agentLogs)) && (
-          <AgentLogPanel 
-            moveResults={agentLogs} 
-            onStep={mode === 'agent' ? performAgentMove : null} 
-            onAutoSolve={mode === 'agent' ? () => setIsAuto(true) : null} 
-            isAuto={mode === 'pva' ? 'pva' : isAuto || isComplete || hasDeadEnd}
-            title={mode === 'pva' ? "Agent's Choice" : "Strategy Analysis"}
-          />
-        )}
-      </div>
+      {(mode === 'agent' || mode === 'pva') && (
+        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={mode === 'pva' ? 'pva' : isAuto || isComplete || hasDeadEnd} title="Constraint Propagation Log" />
+      )}
     </div>
   );
 }

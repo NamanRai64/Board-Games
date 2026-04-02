@@ -60,14 +60,18 @@ function App() {
               >
                 <div style={{ 
                   width: '100%', 
-                  height: '180px', 
+                  height: '240px', // Bigger container
                   overflow: 'hidden', 
                   borderRadius: '16px', 
-                  marginBottom: '20px', 
-                  backgroundColor: 'rgba(0,0,0,0.3)',
-                  border: '1px solid var(--color-border)'
+                  marginBottom: '24px', 
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  border: '1px solid var(--color-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '20px'
                 }}>
-                    <img src={game.img} alt={game.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: '0.5s ease' }} />
+                    <img src={game.img} alt={game.name} style={{ width: '100%', height: '100%', objectFit: 'contain', transition: '0.6s cubic-bezier(0.2, 0.8, 0.2, 1)' }} />
                 </div>
                 <h3>{game.name}</h3>
                 <p style={{ minHeight: '3em' }}>{game.desc}</p>
