@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Bot, User, BrainCircuit, Play, FastForward, Info, AlertTriangle } from 'lucide-react';
 
-export function topNRandom(scoredMoves, n = 5) {
+export function topNRandom(scoredMoves, n = 1) {
   if (!scoredMoves || scoredMoves.length === 0) return null;
   const sorted = [...scoredMoves].sort((a, b) => b.score - a.score);
-  const topN = sorted.slice(0, n);
-  const randomIndex = Math.floor(Math.random() * topN.length);
-  return { chosen: topN[randomIndex], topN, sorted };
+  // Always return the best move for professional optimal performance
+  return { chosen: sorted[0], topN: sorted.slice(0, n), sorted };
 }
 
 export function StatusBanner({ status, message }) {

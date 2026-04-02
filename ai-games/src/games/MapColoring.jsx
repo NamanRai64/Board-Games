@@ -246,7 +246,8 @@ export default function MapColoring() {
               return (
                 <button 
                   key={idx} 
-                  style={{ width: '32px', height: '32px', background: c, borderRadius: '50%', opacity: isValid ? 1 : 0.15, cursor: isValid ? 'pointer' : 'not-allowed', border: isSelected ? '2px solid #fff' : 'none' }}
+                  style={{ width: '32px', height: '32px', background: c, borderRadius: '50%', opacity: isValid ? 1 : 0.15, cursor: isValid ? 'pointer' : 'not-allowed', border: '2px solid transparent' }}
+                  className={isValid ? 'color-dot-active' : ''}
                   onClick={() => selectColor(idx)}
                   disabled={!isValid}
                 />
@@ -264,9 +265,10 @@ export default function MapColoring() {
         {(mode === 'agent' || mode === 'pva' || (mode === '2player' && agentLogs)) && (
           <AgentLogPanel 
             moveResults={agentLogs} 
-            onStep={performAgentMove} 
-            onAutoSolve={() => setIsAuto(true)} 
-            isAuto={isAuto || isComplete || hasDeadEnd || mode === 'pva'}
+            onStep={mode === 'agent' ? performAgentMove : null} 
+            onAutoSolve={mode === 'agent' ? () => setIsAuto(true) : null} 
+            isAuto={mode === 'pva' ? 'pva' : isAuto || isComplete || hasDeadEnd}
+            title={mode === 'pva' ? "Agent's Choice" : "Strategy Analysis"}
           />
         )}
       </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
-import { Users, Bot } from 'lucide-react';
 
 export default function TicTacToe() {
   const [size, setSize] = useState(3);
@@ -10,7 +9,7 @@ export default function TicTacToe() {
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
 
-  const calculateWinner = (squares) => {
+  const calculateWinner = useCallback((squares) => {
     const lines = [];
     for (let i = 0; i < size; i++) {
         const row = [];
@@ -34,13 +33,11 @@ export default function TicTacToe() {
       if (first && line.every(idx => squares[idx] === first)) return first;
     }
     return squares.includes(null) ? null : 'Draw';
-  };
+  }, [size]);
 
-  const winner = calculateWinner(board);
-
-  const minimax = (squares, depth, isMaximizing, playerChar) => {
+  const minimax = useCallback((squares, depth, isMaximizing, playerChar) => {
     const result = calculateWinner(squares);
-    const depthLimit = size === 3 ? 10 : 3; 
+    const depthLimit = size === 3 ? 10 : 4; // Improved for 4x4 but kept balanced
 
     if (result === playerChar) return 10 - depth;
     if (result === (playerChar === 'X' ? 'O' : 'X')) return depth - 10;
@@ -68,16 +65,23 @@ export default function TicTacToe() {
       }
       return bestScore;
     }
-  };
+  }, [size, calculateWinner]);
 
   const performAgentMove = useCallback(() => {
-    if (winner) {
+    const gameWinner = calculateWinner(board);
+    if (gameWinner) {
       setIsAuto(false);
       return;
     }
+
     const currentPlayer = isXNext ? 'X' : 'O';
     const empty = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
-    const sample = size === 3 ? empty : empty.sort(() => Math.random() - 0.5).slice(0, 8);
+    
+    // EXHAUSTIVE Search: Test all available moves in sample (all of them if small enough)
+    // For 4x4, we now test almost all empty spaces to avoid "random" behavior
+    const sampleSize = size === 3 ? 9 : 14; 
+    const sample = empty.sort(() => Math.random() - 0.5).slice(0, sampleSize);
+
     let scoredMoves = [];
     for (let i of sample) {
       const newBoard = [...board];
@@ -85,6 +89,7 @@ export default function TicTacToe() {
       let score = minimax(newBoard, 0, false, currentPlayer);
       scoredMoves.push({ move: i, score });
     }
+
     const result = topNRandom(scoredMoves, 5); 
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
@@ -98,7 +103,9 @@ export default function TicTacToe() {
     } else {
       setIsAuto(false);
     }
-  }, [board, isXNext, winner, size]);
+  }, [board, isXNext, size, calculateWinner, minimax]);
+
+  const winner = calculateWinner(board);
 
   useEffect(() => {
     resetGame();
@@ -122,10 +129,12 @@ export default function TicTacToe() {
   const handleCellClick = (index) => {
     if (board[index] || winner || (mode === 'agent' && isAuto)) return;
     if (mode === 'pva' && !isXNext) return;
-    const newBoard = [...board];
-    newBoard[index] = isXNext ? 'X' : 'O';
-    setBoard(newBoard);
-    setIsXNext(!isXNext);
+    setBoard(prev => {
+      const next = [...prev];
+      next[index] = isXNext ? 'X' : 'O';
+      return next;
+    });
+    setIsXNext(prev => !prev);
   };
 
   const resetGame = () => {
@@ -149,8 +158,8 @@ export default function TicTacToe() {
         </div>
         <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
-          <button className={`btn ${size === 3 ? 'btn-secondary' : ''}`} onClick={() => setSize(3)}>3x3</button>
-          <button className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
+          <button key="3x3" className={`btn ${size === 3 ? 'btn-secondary' : ''}`} onClick={() => setSize(3)}>3x3</button>
+          <button key="4x4" className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
         </div>
       </div>
       <StatusBanner status={statusType} message={statusMsg} />
@@ -165,7 +174,7 @@ export default function TicTacToe() {
         <button className="btn" onClick={resetGame}>Restart Game</button>
       </div>
       {(mode === 'agent' || mode === 'pva') && (
-        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || !!winner || mode === 'pva'} />
+        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || !!winner || mode === 'pva'} title={mode === 'pva' ? "Agent's Strategy" : "Optimal Solver"} />
       )}
     </div>
   );

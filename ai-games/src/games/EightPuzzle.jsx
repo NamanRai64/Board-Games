@@ -8,18 +8,18 @@ export default function EightPuzzle() {
   const [mode, setMode] = useState('manual'); 
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
+  const [prevMoveIdx, setPrevMoveIdx] = useState(null);
 
-  const getGoal = (s) => {
+  const getGoal = useCallback((s) => {
     const goal = [];
     for (let i = 1; i < s * s; i++) goal.push(i);
     goal.push(0);
     return goal;
-  };
+  }, []);
 
   const shuffleBoard = () => {
     const goal = getGoal(size);
     let current = [...goal];
-    // Random walk to ensure solvability
     for (let i = 0; i < 200; i++) {
         const idx = current.indexOf(0);
         const neighbors = [];
@@ -35,13 +35,15 @@ export default function EightPuzzle() {
     setSolved(false);
     setAgentLogs(null);
     setIsAuto(false);
+    setPrevMoveIdx(null);
   };
 
   useEffect(() => {
     shuffleBoard();
   }, [size]);
 
-  const getManhattan = (curr, targetSize) => {
+  // Manhattan + Linear Conflict Heuristic (More Optimal)
+  const getHeuristic = useCallback((curr, targetSize) => {
     let dist = 0;
     const goal = getGoal(targetSize);
     for (let i = 0; i < curr.length; i++) {
@@ -51,10 +53,24 @@ export default function EightPuzzle() {
         const startR = Math.floor(i / targetSize), startC = i % targetSize;
         const endR = Math.floor(targetIdx / targetSize), endC = targetIdx % targetSize;
         dist += Math.abs(startR - endR) + Math.abs(startC - endC);
+
+        // Linear Conflict in same row
+        if (startR === endR) {
+          for (let j = i + 1; j < (startR + 1) * targetSize; j++) {
+            const val2 = curr[j];
+            if (val2 !== 0) {
+              const targetIdx2 = val2 - 1;
+              const endR2 = Math.floor(targetIdx2 / targetSize);
+              if (endR2 === startR) {
+                if (targetIdx > targetIdx2) dist += 1; // Basic Conflict
+              }
+            }
+          }
+        }
       }
     }
     return dist;
-  };
+  }, [getGoal]);
 
   const performAgentMove = useCallback(() => {
     if (solved) {
@@ -73,24 +89,30 @@ export default function EightPuzzle() {
     const scored = moves.map(m => {
         const nextBoard = [...board];
         [nextBoard[idx], nextBoard[m.to]] = [nextBoard[m.to], nextBoard[idx]];
-        const score = getManhattan(nextBoard, size);
+        let score = getHeuristic(nextBoard, size);
+        
+        // Huge penalty for cyclic moves (going back to where we just came from)
+        if (m.to === prevMoveIdx) score += 20;
+
         return { move: m, score: -score }; 
     });
 
     const result = topNRandom(scored, 3);
     if (result && result.chosen) {
-        console.log(`EightPuzzle agent chose move ${result.chosen.move.name}`);
         setAgentLogs({ ...result, chosen: { ...result.chosen } });
-        const nextIdx = result.chosen.move.to;
+        const emptyIdxBefore = idx;
+        const nextTargetIdx = result.chosen.move.to;
         
         setBoard(prev => {
             const next = [...prev];
             const emptyIdx = next.indexOf(0);
-            [next[emptyIdx], next[nextIdx]] = [next[nextIdx], next[emptyIdx]];
+            [next[emptyIdx], next[nextTargetIdx]] = [next[nextTargetIdx], next[emptyIdx]];
             return next;
         });
 
-        // Check if solved AFTER updating board
+        // Store the index where the empty cell WAS, to avoid a cycle on next turn
+        setPrevMoveIdx(emptyIdxBefore);
+
         setTimeout(() => {
           setBoard(current => {
             if (JSON.stringify(current) === JSON.stringify(getGoal(size))) setSolved(true);
@@ -100,7 +122,7 @@ export default function EightPuzzle() {
     } else {
         setIsAuto(false);
     }
-  }, [board, size, solved]);
+  }, [board, size, solved, getHeuristic, getGoal, prevMoveIdx]);
 
   useEffect(() => {
     let timeout;
@@ -122,26 +144,22 @@ export default function EightPuzzle() {
       const nextBoard = [...board];
       [nextBoard[emptyIdx], nextBoard[idx]] = [nextBoard[idx], nextBoard[emptyIdx]];
       setBoard(nextBoard);
+      setPrevMoveIdx(null); // Manual move resets history
       if (JSON.stringify(nextBoard) === JSON.stringify(getGoal(size))) setSolved(true);
     }
   };
 
-  const currentDist = getManhattan(board, size);
+  const currentDist = getHeuristic(board, size);
   let statusMsg = solved ? 'Puzzle Solved!' : `Current Distance: ${currentDist}`;
   let statusType = solved ? 'win' : 'thinking';
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Sliding Puzzle</h2>
-      
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>
-            Manual
-          </button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-             Agent
-          </button>
+          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>Manual</button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Agent</button>
         </div>
         <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
@@ -149,48 +167,19 @@ export default function EightPuzzle() {
           <button className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
         </div>
       </div>
-
       <StatusBanner status={statusType} message={statusMsg} />
-
-      <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: `repeat(${size}, 70px)`, 
-          gap: '4px',
-          padding: '4px',
-          background: 'var(--color-panel-border)',
-          borderRadius: '8px',
-          margin: '0 auto',
-          width: 'fit-content'
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${size}, 70px)`, gap: '4px', padding: '4px', background: 'var(--color-panel-border)', borderRadius: '8px', margin: '0 auto', width: 'fit-content' }}>
         {board.map((tile, idx) => (
-          <button 
-            key={idx} 
-            className={`cell ${tile === 0 ? 'empty' : ''}`} 
-            onClick={() => handleTileClick(idx)}
-            disabled={tile === 0 || solved || (mode === 'agent')}
-            style={{ 
-              opacity: tile === 0 ? 0 : 1, 
-              color: 'var(--color-link)',
-              fontSize: size === 3 ? '1.5rem' : '1.2rem',
-              width: '70px', height: '70px'
-            }}
-          >
+          <button key={idx} className={`cell ${tile === 0 ? 'empty' : ''}`} onClick={() => handleTileClick(idx)} disabled={tile === 0 || solved || isAuto} style={{ opacity: tile === 0 ? 0 : 1, color: 'var(--color-link)', fontSize: size === 3 ? '1.5rem' : '1.2rem', width: '70px', height: '70px' }}>
             {tile}
           </button>
         ))}
       </div>
-
       <div style={{ textAlign: 'center', marginTop: '24px' }}>
         <button className="btn" onClick={shuffleBoard}>Shuffle & New Game</button>
       </div>
-
       {mode === 'agent' && (
-        <AgentLogPanel 
-          moveResults={agentLogs} 
-          onStep={performAgentMove} 
-          onAutoSolve={() => setIsAuto(true)} 
-          isAuto={isAuto || solved}
-        />
+        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || solved} />
       )}
     </div>
   );
