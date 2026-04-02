@@ -1,213 +1,174 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup, SessionStats } from '../components';
 import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
 export default function NQueens() {
-  const [size, setSize] = useState(8);
-  const [board, setBoard] = useState([]); // Array of column indices for each row
-  const [mode, setMode] = useState('manual'); 
+  const [size, setSize] = useState(4);
+  const [board, setBoard] = useState(Array(size).fill(null)); 
+  const [mode, setMode] = useState('manual');
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
-  const [hintCol, setHintCol] = useState(null);
   const [warningMsg, setWarningMsg] = useState('');
+  const [stats, setStats] = useState({ wins: 0, losses: 0, draws: 0 });
 
-  const isSafe = (testBoard, row, col) => {
-    for (let r = 0; r < row; r++) {
-      const c = testBoard[r];
-      if (c === col || Math.abs(c - col) === Math.abs(r - row)) {
-        return false;
-      }
+  useEffect(() => { resetGame(); }, [size]);
+  
+  const isValid = (squares, row, col) => {
+    for (let i = 0; i < row; i++) {
+        const prevCol = squares[i];
+        if (prevCol === col) return false;
+        if (Math.abs(prevCol - col) === Math.abs(i - row)) return false;
     }
     return true;
   };
 
-  const getValidCols = (currentBoard, row) => {
+  const getValidCols = (squares, row) => {
     const valid = [];
     for (let c = 0; c < size; c++) {
-      if (isSafe(currentBoard, row, c)) valid.push(c);
+        if (isValid(squares, row, c)) valid.push(c);
     }
     return valid;
   };
 
-  const computeScore = (currentBoard, row, col) => {
-    if (row === size - 1) return 100; // Winning move
-    const testBoard = [...currentBoard, col];
-    return getValidCols(testBoard, row + 1).length; 
-  };
-
   const calculateAgentMoves = useCallback(() => {
-    const currentRow = board.length;
-    if (currentRow >= size) return null;
+    const row = board.findIndex(v => v === null);
+    if (row === -1) return null;
 
-    const validCols = getValidCols(board, currentRow);
-    const scoredMoves = validCols.map(col => ({
-      move: col, 
-      score: computeScore(board, currentRow, col)
-    }));
+    const validCols = getValidCols(board, row);
+    if (validCols.length === 0) return { error: "No safe columns remaining in this state.", sorted: [] };
+
+    const scoredMoves = validCols.map(col => {
+      const testBoard = [...board];
+      testBoard[row] = col;
+      // Heuristic: LCV - Pick column that leaves most future rows options
+      let score = 0;
+      if (row < size - 1) score = getValidCols(testBoard, row + 1).length; 
+      return { move: { row, col }, score };
+    });
 
     return topNRandom(scoredMoves, 5);
   }, [board, size]);
 
   const performAgentMove = useCallback(() => {
-    if (board.length >= size) {
-      setIsAuto(false);
-      return;
-    }
-
+    if (!board.includes(null)) { setIsAuto(false); return; }
     const result = calculateAgentMoves();
     if (result && result.chosen) {
-      console.log(`N-Queens agent chose column ${result.chosen.move} for row ${board.length}`);
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
-      setBoard(prev => [...prev, result.chosen.move]);
-      setHintCol(null);
+      const { row, col } = result.chosen.move;
+      setBoard(prev => {
+        const next = [...prev];
+        next[row] = col;
+        return next;
+      });
     } else {
-      console.log("N-Queens agent hit dead end");
-      setAgentLogs({ error: "Dead End reached. No valid moves.", sorted: [] });
+      setWarningMsg("AI reached a conflict state. Backtrack needed.");
       setIsAuto(false);
     }
-  }, [board, size, calculateAgentMoves]);
+  }, [calculateAgentMoves, board]);
+
+  useEffect(() => {
+    if (!board.includes(null) && board.length > 0) setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
+  }, [board]);
+
+  useEffect(() => {
+    let timeout;
+    if (mode === 'agent' && isAuto && board.includes(null)) {
+      timeout = setTimeout(() => performAgentMove(), 400);
+    }
+    return () => clearTimeout(timeout);
+  }, [mode, isAuto, board, performAgentMove]);
+
+  const handleCellClick = (row, col) => {
+    if (mode === 'agent' || isAuto) return;
+    const firstEmptyRow = board.findIndex(v => v === null);
+    if (row !== firstEmptyRow) {
+        setWarningMsg(`Must place in row ${firstEmptyRow}!`);
+        return;
+    }
+    if (!isValid(board, row, col)) {
+        setWarningMsg("Collision! Safe zones only.");
+        return;
+    }
+    setBoard(prev => {
+      const next = [...prev];
+      next[row] = col;
+      return next;
+    });
+    setAgentLogs(null);
+  };
+
+  const resetGame = () => {
+    setBoard(Array(size).fill(null));
+    setAgentLogs(null);
+    setIsAuto(false);
+  };
+
+  const undoMove = () => {
+    setBoard(prev => {
+      const next = [...prev];
+      const last = next.findLastIndex(v => v !== null);
+      if (last !== -1) next[last] = null;
+      return next;
+    });
+    setAgentLogs(null);
+    setIsAuto(false);
+  };
 
   const provideHint = () => {
     const result = calculateAgentMoves();
     if (result && result.chosen) {
-      setAgentLogs({ ...result, chosen: { ...result.chosen } });
-      setHintCol(result.chosen.move);
+        setAgentLogs({ ...result, manualHint: true });
     } else {
-      setAgentLogs({ error: "No valid moves from here.", sorted: [] });
+        setWarningMsg("No safe moves found in current path.");
     }
   };
 
-  useEffect(() => {
-    let timeout;
-    if (mode === 'agent' && isAuto && board.length < size) {
-      timeout = setTimeout(() => {
-        performAgentMove();
-      }, 400);
-    }
-    return () => clearTimeout(timeout);
-  }, [mode, isAuto, board.length, size, performAgentMove]);
-
-  const handleCellClick = (row, col) => {
-    if (mode === 'agent' || isAuto || board.length !== row) return; 
-    
-    if (isSafe(board, row, col)) {
-      setBoard([...board, col]);
-      setHintCol(null);
-      setAgentLogs(null);
-    } else {
-      setWarningMsg("Invalid placement! Conflict detected.");
-    }
-  };
-
-  const undoMove = () => {
-    if (board.length > 0) {
-      setBoard(board.slice(0, -1));
-      setHintCol(null);
-      setAgentLogs(null);
-    }
-  };
-
-  const resetGame = () => {
-    setBoard([]);
-    setAgentLogs(null);
-    setIsAuto(false);
-    setHintCol(null);
-  };
-
-  const isSolved = board.length === size;
-  const isDeadEnd = !isSolved && getValidCols(board, board.length).length === 0;
-  
-  let statusMsg = isSolved ? 'All Queens Placed Successfully!' : 
-                  isDeadEnd ? 'Dead End! Must Undo.' : 
-                  `Placing Queen for Row ${board.length + 1}`;
-  let statusType = isSolved ? 'win' : isDeadEnd ? 'lose' : 'thinking';
+  const isComplete = !board.includes(null);
+  const statusMsg = isComplete ? 'Alignment Success! (Solved)' : `Symmetry Nodes: ${board.filter(v => v !== null).length}/${size}`;
+  const statusType = isComplete ? 'win' : 'thinking';
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
-      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>N-Queens</h2>
+      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>N-Queens</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
-            Manual
-          </button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-             Agent
-          </button>
+      <SessionStats stats={stats} />
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>Manual</button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>AI Solver</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Size (N):</span>
-          {[4, 6, 8, 10, 12].map(n => (
-             <button key={n} className={`btn ${size === n ? 'btn-secondary' : ''}`} onClick={() => { setSize(n); resetGame(); }}>{n}</button>
+        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
+          {[4, 6, 8, 12].map(n => (
+            <button key={n} className={`btn ${size === n ? 'btn-secondary' : ''}`} onClick={() => setSize(n)}>{n}x{n}</button>
           ))}
         </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: `repeat(${size}, minmax(30px, 40px))`, 
-        gap: '2px',
-        justifyContent: 'center',
-        margin: '24px 0',
-        backgroundColor: 'var(--color-panel-border)',
-        padding: '2px',
-        borderRadius: '6px',
-        overflowX: 'auto'
-      }}>
-        {Array.from({ length: size }).map((_, r) => (
-          Array.from({ length: size }).map((__, c) => {
-            const isPlaced = board[r] === c;
-            const isClickableRow = mode === 'manual' && r === board.length;
-            const isHint = hintCol !== null && isClickableRow && c === hintCol;
-            const isDark = (r + c) % 2 === 1;
-            const cellSize = size > 8 ? '30px' : '40px';
-
-            return (
-              <button 
-                key={`${r}-${c}`}
-                style={{ 
-                  width: cellSize, height: cellSize,
-                  backgroundColor: isPlaced ? 'var(--color-primary)' : 
-                                   isHint ? 'rgba(210, 153, 34, 0.4)' : 
-                                   isDark ? 'var(--color-bg)' : 'var(--color-panel)',
-                  border: isHint ? '2px solid var(--color-warning)' : '1px solid transparent',
-                  cursor: isClickableRow ? 'pointer' : 'default',
-                  color: isPlaced ? '#fff' : 'var(--color-link)',
-                  fontWeight: 'bold',
-                  fontSize: size > 8 ? '14px' : '20px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  borderRadius: '2px'
-                }}
-                onClick={() => handleCellClick(r, c)}
-                disabled={!isClickableRow}
-              >
-                {isPlaced ? '♛' : null}
-              </button>
-            )
-          })
-        ))}
+      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 1fr)`, width: '100%', maxWidth: '400px', margin: '32px auto' }}>
+        {Array(size * size).fill(null).map((_, i) => {
+          const r = Math.floor(i / size), c = i % size;
+          const isQueen = board[r] === c;
+          const isCheck = (r + c) % 2 === 0;
+          return (
+            <button key={i} className="cell" onClick={() => handleCellClick(r, c)} style={{ background: isQueen ? 'var(--color-surface-hover)' : (isCheck ? 'rgba(255,255,255,0.03)' : 'transparent'), minHeight: '40px', boxSizing: 'border-box' }} disabled={isAuto || mode === 'agent'}>
+              {isQueen && <Bot size={24} style={{ color: 'var(--color-link)' }} />}
+            </button>
+          );
+        })}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '24px', gap: '8px', display: 'flex', justifyContent: 'center' }}>
-        <button className="btn" onClick={resetGame}>Restart</button>
-        {mode === 'manual' && board.length > 0 && <button className="btn" onClick={undoMove}>Undo</button>}
-        {mode === 'manual' && !isSolved && !isDeadEnd && (
-          <button className="btn btn-secondary" style={{ color: 'var(--color-warning)' }} onClick={provideHint}>
-            Hint
-          </button>
-        )}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+        <button className="btn" onClick={undoMove}>Backtrack</button>
+        <button className="btn btn-secondary" onClick={provideHint}><Lightbulb size={16} /> Hint</button>
+        <button className="btn" onClick={resetGame}>Format Matrix</button>
       </div>
 
-      {(mode === 'agent' || (mode === 'manual' && agentLogs)) && (
-        <AgentLogPanel 
-          moveResults={agentLogs} 
-          onStep={performAgentMove} 
-          onAutoSolve={() => setIsAuto(true)} 
-          isAuto={isAuto || isSolved || isDeadEnd}
-        />
+      {mode === 'agent' && (
+        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || isComplete} title="Least Constraining Matrix" />
       )}
     </div>
   );
