@@ -163,16 +163,24 @@ export default function Wumpus() {
   const currentSensors = getSensors(pos.r, pos.c);
 
   return (
-    <div style={{ padding: '20px', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px' }}>Wumpus World</h2>
       
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-        <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
-          <Users size={16} /> Manual
-        </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={16} /> Agent Solve
-        </button>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
+            Manual
+          </button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
+             Agent
+          </button>
+        </div>
+        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
+          {[4, 5, 6, 8].map(s => (
+             <button key={s} className={`btn ${size === s ? 'btn-secondary' : ''}`} onClick={() => setSize(s)}>{s}x{s}</button>
+          ))}
+        </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
@@ -180,18 +188,19 @@ export default function Wumpus() {
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: `repeat(${SIZE}, 60px)`, 
+          gridTemplateColumns: `repeat(${size}, minmax(40px, 60px))`, 
           gap: '4px',
           background: 'var(--color-panel-border)',
           padding: '4px', borderRadius: '8px'
         }}>
-          {Array.from({ length: SIZE }).map((_, r) => (
-            Array.from({ length: SIZE }).map((__, c) => {
+          {Array.from({ length: size }).map((_, r) => (
+            Array.from({ length: size }).map((__, c) => {
               const isHero = pos.r === r && pos.c === c;
               const hasVisited = isVisited(r, c);
               const isAdjacent = Math.abs(r - pos.r) + Math.abs(c - pos.c) === 1;
               const Clickable = mode === 'manual' && isAdjacent && !status;
               const IsHint = hintMove && hintMove.r === r && hintMove.c === c;
+              const cellSize = size > 6 ? '40px' : '60px';
 
               const hasWumpus = world.wumpus.r === r && world.wumpus.c === c;
               const hasPit = world.pits.find(p => p.r === r && p.c === c);
@@ -209,11 +218,11 @@ export default function Wumpus() {
                 <button 
                   key={`${r}-${c}`}
                   style={{ 
-                    width: '60px', height: '60px',
+                    width: cellSize, height: cellSize,
                     backgroundColor: hasVisited ? 'var(--color-bg)' : 'var(--color-panel)',
                     border: IsHint ? '2px solid var(--color-warning)' : '1px solid transparent',
                     cursor: Clickable ? 'pointer' : 'default',
-                    fontSize: '24px',
+                    fontSize: size > 6 ? '18px' : '24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     borderRadius: '4px'
                   }}
@@ -239,7 +248,7 @@ export default function Wumpus() {
         <button className="btn" onClick={resetGame}>Restart</button>
         {mode === 'manual' && !status && (
           <button className="btn btn-secondary" style={{ color: 'var(--color-warning)' }} onClick={provideHint}>
-            <Lightbulb size={16} /> Hint
+            Hint
           </button>
         )}
       </div>

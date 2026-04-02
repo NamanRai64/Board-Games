@@ -2,22 +2,55 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
 import { Users, Bot } from 'lucide-react';
 
-const NODES = [
-  { id: 0, x: 100, y: 50, label: 'A' },
-  { id: 1, x: 250, y: 50, label: 'B' },
-  { id: 2, x: 175, y: 150, label: 'C' },
-  { id: 3, x: 50, y: 250, label: 'D' },
-  { id: 4, x: 300, y: 250, label: 'E' },
-];
+const LEVELS = {
+  easy: {
+    nodes: [
+      { id: 0, x: 100, y: 50, label: 'A' },
+      { id: 1, x: 250, y: 50, label: 'B' },
+      { id: 2, x: 175, y: 150, label: 'C' },
+      { id: 3, x: 50, y: 250, label: 'D' },
+      { id: 4, x: 300, y: 250, label: 'E' },
+    ],
+    edges: [[0, 1], [0, 2], [1, 2], [0, 3], [2, 3], [2, 4], [1, 4], [3, 4]]
+  },
+  medium: {
+    nodes: [
+        { id: 0, x: 175, y: 30, label: '0' },
+        { id: 1, x: 50, y: 100, label: '1' },
+        { id: 2, x: 300, y: 100, label: '2' },
+        { id: 3, x: 110, y: 180, label: '3' },
+        { id: 4, x: 240, y: 180, label: '4' },
+        { id: 5, x: 50, y: 260, label: '5' },
+        { id: 6, x: 300, y: 260, label: '6' },
+        { id: 7, x: 175, y: 260, label: '7' },
+    ],
+    edges: [[0,1], [0,2], [1,3], [2,4], [3,4], [3,5], [4,6], [5,7], [6,7], [1,5]]
+  },
+  hard: {
+    nodes: [
+        { id: 0, x: 175, y: 30, label: 'A' },
+        { id: 1, x: 80, y: 70, label: 'B' },
+        { id: 2, x: 270, y: 70, label: 'C' },
+        { id: 3, x: 40, y: 150, label: 'D' },
+        { id: 4, x: 310, y: 150, label: 'E' },
+        { id: 5, x: 110, y: 150, label: 'F' },
+        { id: 6, x: 240, y: 150, label: 'G' },
+        { id: 7, x: 175, y: 210, label: 'H' },
+        { id: 8, x: 80, y: 260, label: 'I' },
+        { id: 9, x: 270, y: 260, label: 'J' },
+        { id: 10, x: 175, y: 130, label: 'K' },
+        { id: 11, x: 175, y: 280, label: 'L' }
+    ],
+    edges: [[0,1], [0,2], [1,3], [2,4], [3,8], [4,9], [1,5], [2,6], [5,6], [5,7], [6,7], [7,8], [7,9], [5,10], [6,10], [8,11], [9,11]]
+  }
+};
 
-const EDGES = [
-  [0, 1], [0, 2], [1, 2], [0, 3], [2, 3], [2, 4], [1, 4], [3, 4]
-];
-
-const COLORS = ['#ff3333', '#39ff14', '#00ffff']; // Red, Green, Cyan
+const COLORS = ['#58a6ff', '#238636', '#da3633', '#d29922']; // blue, green, red, yellow
 
 export default function MapColoring() {
-  const [board, setBoard] = useState(Array(5).fill(null)); // store color index
+  const [level, setLevel] = useState('easy');
+  const { nodes, edges } = LEVELS[level];
+  const [board, setBoard] = useState(Array(nodes.length).fill(null)); 
   const [isP1Next, setIsP1Next] = useState(true);
   const [mode, setMode] = useState('2player');
   const [agentLogs, setAgentLogs] = useState(null);
@@ -25,14 +58,18 @@ export default function MapColoring() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [warningMsg, setWarningMsg] = useState('');
 
+  useEffect(() => {
+    resetGame();
+  }, [level]);
+
   const getNeighbors = (nId) => {
-    return EDGES.filter(e => e.includes(nId)).map(e => e[0] === nId ? e[1] : e[0]);
+    return edges.filter(e => e.includes(nId)).map(e => e[0] === nId ? e[1] : e[0]);
   };
 
   const getValidColors = (currentBoard, nId) => {
     const neighbors = getNeighbors(nId);
     const usedColors = neighbors.map(neighborId => currentBoard[neighborId]).filter(c => c !== null);
-    return [0, 1, 2].filter(c => !usedColors.includes(c)); // indices 0,1,2
+    return [0, 1, 2, 3].filter(c => !usedColors.includes(c)); 
   };
 
   const countOptionsForNeighbor = (currentBoard, neighborId) => {
