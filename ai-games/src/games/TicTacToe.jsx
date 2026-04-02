@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, SessionStats } from '../components';
 
 export default function TicTacToe() {
   const [size, setSize] = useState(3);
   const [board, setBoard] = useState(Array(size * size).fill(null));
   const [isXNext, setIsXNext] = useState(true);
-  const [mode, setMode] = useState('2player'); // '2player', 'pva', or 'agent'
+  const [mode, setMode] = useState('2player'); 
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
+  const [stats, setStats] = useState({ wins: 0, losses: 0, draws: 0 });
 
   const calculateWinner = useCallback((squares) => {
     const lines = [];
@@ -37,7 +38,7 @@ export default function TicTacToe() {
 
   const minimax = useCallback((squares, depth, isMaximizing, playerChar) => {
     const result = calculateWinner(squares);
-    const depthLimit = size === 3 ? 10 : 4; // Improved for 4x4 but kept balanced
+    const depthLimit = size === 3 ? 10 : 4; 
 
     if (result === playerChar) return 10 - depth;
     if (result === (playerChar === 'X' ? 'O' : 'X')) return depth - 10;
@@ -73,15 +74,10 @@ export default function TicTacToe() {
       setIsAuto(false);
       return;
     }
-
     const currentPlayer = isXNext ? 'X' : 'O';
     const empty = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
-    
-    // EXHAUSTIVE Search: Test all available moves in sample (all of them if small enough)
-    // For 4x4, we now test almost all empty spaces to avoid "random" behavior
     const sampleSize = size === 3 ? 9 : 14; 
     const sample = empty.sort(() => Math.random() - 0.5).slice(0, sampleSize);
-
     let scoredMoves = [];
     for (let i of sample) {
       const newBoard = [...board];
@@ -89,7 +85,6 @@ export default function TicTacToe() {
       let score = minimax(newBoard, 0, false, currentPlayer);
       scoredMoves.push({ move: i, score });
     }
-
     const result = topNRandom(scoredMoves, 5); 
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
@@ -106,6 +101,15 @@ export default function TicTacToe() {
   }, [board, isXNext, size, calculateWinner, minimax]);
 
   const winner = calculateWinner(board);
+
+  // Update Stats
+  useEffect(() => {
+    if (winner) {
+      if (winner === 'X') setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
+      else if (winner === 'O') setStats(prev => ({ ...prev, losses: prev.losses + 1 }));
+      else if (winner === 'Draw') setStats(prev => ({ ...prev, draws: prev.draws + 1 }));
+    }
+  }, [winner]);
 
   useEffect(() => {
     resetGame();
@@ -149,32 +153,49 @@ export default function TicTacToe() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Tic-Tac-Toe</h2>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>Tic-Tac-Toe</h2>
+      
+      <SessionStats stats={stats} />
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>PvP</button>
           <button className={`btn ${mode === 'pva' ? 'btn-primary' : ''}`} onClick={() => setMode('pva')}>vs Agent</button>
           <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
+        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button key="3x3" className={`btn ${size === 3 ? 'btn-secondary' : ''}`} onClick={() => setSize(3)}>3x3</button>
           <button key="4x4" className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
         </div>
       </div>
+
       <StatusBanner status={statusType} message={statusMsg} />
-      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 80px)`, width: 'fit-content' }}>
+
+      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 1fr)`, width: '100%', maxWidth: '360px', margin: '0 auto' }}>
         {board.map((cell, idx) => (
-          <button key={idx} className={`cell ${cell ? 'active' : ''}`} onClick={() => handleCellClick(idx)} disabled={!!winner || (mode === 'agent' && isAuto) || (mode === 'pva' && !isXNext)} style={{ fontSize: size === 3 ? '2rem' : '1.5rem', width: '80px', height: '80px' }}>
-            {cell === 'X' ? <span style={{ color: 'var(--color-link)' }}>X</span> : cell === 'O' ? <span style={{ color: 'var(--color-alert)' }}>O</span> : null}
+          <button 
+            key={idx} 
+            className={`cell ${cell ? 'active' : ''}`} 
+            onClick={() => handleCellClick(idx)} 
+            disabled={!!winner || (mode === 'agent' && isAuto) || (mode === 'pva' && !isXNext)} 
+            style={{ fontSize: size === 3 ? '2.5rem' : '2rem' }}>
+            {cell === 'X' ? <span style={{ color: 'var(--color-link)', filter: 'drop-shadow(0 0 8px var(--color-glow-link))' }}>X</span> : cell === 'O' ? <span style={{ color: 'var(--color-alert)', filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))' }}>O</span> : null}
           </button>
         ))}
       </div>
-      <div style={{ textAlign: 'center', marginTop: '24px' }}>
-        <button className="btn" onClick={resetGame}>Restart Game</button>
+
+      <div style={{ textAlign: 'center', marginTop: '32px' }}>
+        <button className="btn" style={{ padding: '12px 32px' }} onClick={resetGame}>Restart Session</button>
       </div>
+
       {(mode === 'agent' || mode === 'pva') && (
-        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || !!winner || mode === 'pva'} title={mode === 'pva' ? "Agent's Strategy" : "Optimal Solver"} />
+        <AgentLogPanel 
+          moveResults={agentLogs} 
+          onStep={performAgentMove} 
+          onAutoSolve={() => setIsAuto(true)} 
+          isAuto={mode === 'pva' ? 'pva' : isAuto || !!winner} 
+          title={mode === 'pva' ? "The Opponent Thinker" : "Optimal Solver Matrix"} 
+        />
       )}
     </div>
   );

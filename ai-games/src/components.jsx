@@ -17,9 +17,38 @@ export function StatusBanner({ status, message }) {
   if (status === 'thinking') typeClass = 'thinking';
 
   return (
-    <div className={`glass-panel status-banner ${typeClass}`} style={{ textAlign: 'left', marginBottom: '20px', fontWeight: '600', padding: '12px 16px', display: 'flex', alignItems: 'center' }}>
-      {status === 'thinking' ? <BrainCircuit size={18} className="spin" style={{ marginRight: '10px' }} /> : null}
-      <span>{message}</span>
+    <div className={`glass-panel status-banner ${typeClass}`} style={{ 
+      textAlign: 'left', 
+      marginBottom: '20px', 
+      fontWeight: '600', 
+      padding: '16px 20px', 
+      display: 'flex', 
+      alignItems: 'center',
+      borderLeftWidth: '6px',
+      gap: '12px'
+    }}>
+      {status === 'thinking' ? <BrainCircuit size={20} className="spin" style={{ color: 'var(--color-warning)' }} /> : null}
+      <span style={{ fontSize: '1rem', letterSpacing: '0.01em' }}>{message}</span>
+    </div>
+  );
+}
+
+export function SessionStats({ stats }) {
+  if (!stats) return null;
+  return (
+    <div className="glass-panel" style={{ padding: '12px 20px', marginBottom: '24px', display: 'flex', justifyContent: 'center', gap: '32px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Wins</div>
+        <div style={{ color: 'var(--color-primary)', fontSize: '1.25rem', fontWeight: '700' }}>{stats.wins}</div>
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Losses</div>
+        <div style={{ color: 'var(--color-alert)', fontSize: '1.25rem', fontWeight: '700' }}>{stats.losses}</div>
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Draws</div>
+        <div style={{ color: 'var(--color-link)', fontSize: '1.25rem', fontWeight: '700' }}>{stats.draws}</div>
+      </div>
     </div>
   );
 }
@@ -50,46 +79,65 @@ export function AgentLogPanel({ moveResults, onStep, onAutoSolve, isAuto, title 
   const showControls = onStep && onAutoSolve;
 
   return (
-    <div className="glass-panel" style={{ marginTop: '24px', backgroundColor: 'var(--color-bg)' }}>
-      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-main)', marginBottom: '16px', fontSize: '1rem' }}>
-        <Bot size={18} /> {title}
-      </h3>
+    <div className="glass-panel" style={{ marginTop: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-main)', fontSize: '1rem', margin: 0 }}>
+          <Bot size={20} className={isAuto === 'pva' ? 'spin' : ''} /> 
+          {title}
+        </h3>
+        {isAuto === 'pva' && <span className="mono" style={{ color: 'var(--color-link)', fontSize: '0.7rem', padding: '2px 8px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '10px' }}>LIVE_THINKING</span>}
+      </div>
       
       {showControls && !isAuto.toString().includes('pva') && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <button className="btn" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
-            <Play size={14} /> Step
+            <Play size={16} /> Step
           </button>
           <button className="btn btn-primary" onClick={onAutoSolve} disabled={isAuto}>
-            <FastForward size={14} /> Auto-Solve
+            <FastForward size={16} /> Auto-Solve
           </button>
         </div>
       )}
 
-      {isAuto === 'pva' && (
-        <div style={{ color: 'var(--color-link)', marginBottom: '16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <BrainCircuit size={14} className="spin" /> Agent is playing...
-        </div>
-      )}
-
-      <div style={{ background: '#010409', padding: '12px', border: '1px solid var(--color-panel-border)', borderRadius: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-        <div style={{ color: 'var(--color-text-muted)', marginBottom: '8px', fontSize: '0.75rem', fontWeight: '600' }}>LATEST AI LOG</div>
+      <div style={{ 
+        background: 'rgba(0,0,0,0.4)', 
+        padding: '16px', 
+        border: '1px solid var(--color-border)', 
+        borderRadius: '12px', 
+        maxHeight: '220px', 
+        overflowY: 'auto' 
+      }}>
+        <div style={{ color: 'var(--color-text-muted)', marginBottom: '12px', fontSize: '0.7rem', fontWeight: '700', letterSpacing: '0.05em' }}>AI DECISION MATRIX</div>
         {moveResults.sorted && moveResults.sorted.map((m, idx) => {
           const mStr = JSON.stringify(m.move);
           const chosenStr = JSON.stringify(moveResults.chosen?.move);
           const isChosen = mStr === chosenStr;
           
-          let color = 'var(--color-text-muted)';
+          let color = 'rgba(255,255,255,0.4)';
           let fontWeight = '400';
+          let background = 'transparent';
           if (isChosen) {
-            color = 'var(--color-primary)';
+            color = '#fff';
             fontWeight = '600';
+            background = 'rgba(16, 185, 129, 0.1)';
           }
 
           return (
-            <div key={idx} style={{ color, fontWeight, display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: 'var(--mono)', fontSize: '0.8rem', borderBottom: '1px solid #1c2128' }}>
-              <span>{isChosen ? '→ ' : '  '}Move: {mStr}</span>
-              <span>Score: {m.score}</span>
+            <div key={idx} style={{ 
+              color, 
+              fontWeight, 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              padding: '6px 10px', 
+              fontFamily: 'var(--mono)', 
+              fontSize: '0.8rem', 
+              borderRadius: '6px',
+              marginBottom: '2px',
+              backgroundColor: background,
+              border: isChosen ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent'
+            }}>
+              <span>{isChosen ? '→ ' : '  '}{mStr}</span>
+              <span>{m.score.toFixed(2)}</span>
             </div>
           );
         })}
