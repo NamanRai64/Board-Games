@@ -1,18 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
 :root {
-  --color-bg: #050505;
-  --color-panel: #111111;
-  --color-panel-border: #333333;
-  --color-neon-green: #39ff14;
-  --color-neon-cyan: #00ffff;
-  --color-neon-amber: #ffbf00;
-  --color-neon-red: #ff3333;
-  --color-text-main: #e0e0e0;
-  --color-text-muted: #888888;
-  --glow-green: 0 0 10px rgba(57, 255, 20, 0.5);
-  --glow-cyan: 0 0 10px rgba(0, 255, 255, 0.5);
-  --glow-amber: 0 0 10px rgba(255, 191, 0, 0.5);
+  --color-bg: #000000;
+  --color-panel: #0d0600;
+  --color-panel-border: #331400;
+  --color-primary: #ff5500;
+  --color-secondary: #ff8800;
+  --color-accent: #ffb700;
+  --color-alert: #ff1100;
+  --color-text-main: #ffccaa;
+  --color-text-muted: #884422;
+  --glow-primary: 0 0 12px rgba(255, 85, 0, 0.6);
+  --glow-secondary: 0 0 12px rgba(255, 136, 0, 0.6);
 }
 
 * {
@@ -43,12 +42,38 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Glassmorphic Panels */
 .glass-panel {
-  background: rgba(17, 17, 17, 0.8);
+  background: rgba(13, 6, 0, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--color-panel-border);
   border-radius: 8px;
   padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* Custom Warning Popup */
+.custom-popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 15px 30px;
+  border-radius: 8px;
+  box-shadow: var(--glow-primary);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { top: -50px; opacity: 0; }
+  to { top: 20px; opacity: 1; }
 }
 
 /* Base Buttons */
@@ -67,7 +92,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 85, 0, 0.1);
+  border-color: var(--color-primary);
 }
 
 .btn:disabled {
@@ -75,34 +101,24 @@ h1, h2, h3, h4, h5, h6 {
   cursor: not-allowed;
 }
 
-.btn-green {
-  border-color: var(--color-neon-green);
-  color: var(--color-neon-green);
+.btn-primary {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
-.btn-green:hover:not(:disabled) {
-  background: rgba(57, 255, 20, 0.1);
-  box-shadow: var(--glow-green);
+.btn-primary:hover:not(:disabled) {
+  background: rgba(255, 85, 0, 0.15);
+  box-shadow: var(--glow-primary);
 }
 
-.btn-cyan {
-  border-color: var(--color-neon-cyan);
-  color: var(--color-neon-cyan);
+.btn-secondary {
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
 }
 
-.btn-cyan:hover:not(:disabled) {
-  background: rgba(0, 255, 255, 0.1);
-  box-shadow: var(--glow-cyan);
-}
-
-.btn-amber {
-  border-color: var(--color-neon-amber);
-  color: var(--color-neon-amber);
-}
-
-.btn-amber:hover:not(:disabled) {
-  background: rgba(255, 191, 0, 0.1);
-  box-shadow: var(--glow-amber);
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 136, 0, 0.15);
+  box-shadow: var(--glow-secondary);
 }
 
 /* Board Game Grid Basics */
@@ -123,17 +139,18 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 4px;
+  color: var(--color-text-main);
 }
 
 .cell:hover:not(:disabled) {
-  border-color: var(--color-neon-cyan);
-  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.2);
+  border-color: var(--color-secondary);
+  box-shadow: inset 0 0 10px rgba(255, 136, 0, 0.2);
 }
 
 .cell.active {
-  border-color: var(--color-neon-green);
-  color: var(--color-neon-green);
-  box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.2);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 10px rgba(255, 85, 0, 0.2);
 }
 
 /* Scrollbar */
@@ -151,5 +168,44 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: var(--color-primary);
+}
+
+/* Home Menu Cards */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.menu-card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 10px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-primary);
+  box-shadow: var(--glow-primary);
+}
+
+.menu-card h3 {
+  color: var(--color-primary);
+  margin-bottom: 5px;
+}
+
+.menu-card p {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }

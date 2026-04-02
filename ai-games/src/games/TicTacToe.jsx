@@ -121,13 +121,13 @@ export default function TicTacToe() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-neon-cyan)', marginBottom: '20px', textAlign: 'center' }}>Tic-Tac-Toe</h2>
+      <h2 style={{ color: 'var(--color-secondary)', marginBottom: '20px', textAlign: 'center' }}>Tic-Tac-Toe</h2>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button className={`btn ${mode === '2player' ? 'btn-green' : ''}`} onClick={() => setMode('2player')}>
+        <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
           <Users size={18} className="inline-icon" /> 2 Player
         </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-green' : ''}`} onClick={() => setMode('agent')}>
+        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
           <Bot size={18} className="inline-icon" /> Agent vs Auto
         </button>
       </div>
@@ -148,7 +148,7 @@ export default function TicTacToe() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button className="btn btn-cyan" onClick={resetGame}>Restart Game</button>
+        <button className="btn btn-secondary" onClick={resetGame}>Restart Game</button>
       </div>
 
       {mode === 'agent' && (

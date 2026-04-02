@@ -1,19 +1,10 @@
-import React from 'react';
-import { Bot, User, BrainCircuit, Play, FastForward, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, User, BrainCircuit, Play, FastForward, Info, AlertTriangle } from 'lucide-react';
 
-/**
- * Shared utility: Given an array of { move, score }, sort descending by score.
- * Take up to `n` elements from the top (all of which have valid scores).
- * If there are fewer than `n`, take what's available.
- * Returns one chosen move randomly from that top slice.
- */
 export function topNRandom(scoredMoves, n = 5) {
   if (!scoredMoves || scoredMoves.length === 0) return null;
-  // Sort descending by score
   const sorted = [...scoredMoves].sort((a, b) => b.score - a.score);
-  // Take top N
   const topN = sorted.slice(0, n);
-  // Pick random from top N
   const randomIndex = Math.floor(Math.random() * topN.length);
   return { chosen: topN[randomIndex], topN, sorted };
 }
@@ -21,15 +12,35 @@ export function topNRandom(scoredMoves, n = 5) {
 export function StatusBanner({ status, message }) {
   if (!status) return null;
   
-  let colorClass = 'btn-cyan';
-  if (status === 'win') colorClass = 'btn-green';
-  if (status === 'lose') colorClass = 'btn-red';
-  if (status === 'thinking') colorClass = 'btn-amber';
+  let colorClass = 'btn-secondary';
+  if (status === 'win') colorClass = 'btn-primary';
+  if (status === 'lose') colorClass = '';
+  if (status === 'thinking') colorClass = 'btn-secondary';
 
   return (
-    <div className={`glass-panel ${colorClass} status-banner`} style={{ textAlign: 'center', marginBottom: '20px', fontWeight: '800' }}>
-      {status === 'thinking' ? <BrainCircuit className="inline-icon spin" /> : null}
-      <span style={{ marginLeft: '8px' }}>{message}</span>
+    <div className={`glass-panel ${colorClass} status-banner`} style={{ textAlign: 'center', marginBottom: '20px', fontWeight: '800', padding: '15px' }}>
+      {status === 'thinking' ? <BrainCircuit className="inline-icon spin" style={{ marginRight: '8px', verticalAlign: 'middle' }} /> : null}
+      <span style={{ verticalAlign: 'middle' }}>{message}</span>
+    </div>
+  );
+}
+
+// Custom Warning Popup to replace window.alert
+export function WarningPopup({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  return (
+    <div className="custom-popup">
+      <AlertTriangle size={24} />
+      <span>{message}</span>
     </div>
   );
 }
@@ -39,15 +50,15 @@ export function AgentLogPanel({ moveResults, onStep, onAutoSolve, isAuto }) {
 
   return (
     <div className="glass-panel" style={{ marginTop: '20px' }}>
-      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-neon-amber)', marginBottom: '15px' }}>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', marginBottom: '15px' }}>
         <Bot size={20} /> Agent Control
       </h3>
       
       <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-        <button className="btn btn-amber" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
+        <button className="btn btn-secondary" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
           <Play size={16} style={{ verticalAlign: 'middle', marginRight: '5px' }}/> Step
         </button>
-        <button className="btn btn-green" onClick={onAutoSolve} disabled={isAuto}>
+        <button className="btn btn-primary" onClick={onAutoSolve} disabled={isAuto}>
           <FastForward size={16} style={{ verticalAlign: 'middle', marginRight: '5px' }}/> Auto-Solve
         </button>
       </div>
@@ -58,8 +69,8 @@ export function AgentLogPanel({ moveResults, onStep, onAutoSolve, isAuto }) {
           const isChosen = m === moveResults.chosen?.move;
           const isTopN = moveResults.topN?.includes(m);
           let color = 'var(--color-text-muted)';
-          if (isChosen) color = 'var(--color-neon-green)';
-          else if (isTopN) color = 'var(--color-neon-cyan)';
+          if (isChosen) color = 'var(--color-primary)';
+          else if (isTopN) color = 'var(--color-secondary)';
 
           return (
             <div key={idx} style={{ color, display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
