@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
 import { Users, Bot } from 'lucide-react';
 
 const NODES = [
@@ -23,6 +23,7 @@ export default function MapColoring() {
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [warningMsg, setWarningMsg] = useState('');
 
   const getNeighbors = (nId) => {
     return EDGES.filter(e => e.includes(nId)).map(e => e[0] === nId ? e[1] : e[0]);
@@ -105,7 +106,7 @@ export default function MapColoring() {
     if (selectedNode === null) return;
     const valid = getValidColors(board, selectedNode);
     if (!valid.includes(colorIdx)) {
-      alert("Invalid color! Neighbor uses this already.");
+      setWarningMsg("Invalid color! Neighbor uses this already.");
       return;
     }
 
@@ -138,13 +139,14 @@ export default function MapColoring() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-neon-green)', marginBottom: '20px', textAlign: 'center' }}>Map Coloring (CSP)</h2>
+      <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
+      <h2 style={{ color: 'var(--color-primary)', marginBottom: '20px', textAlign: 'center' }}>Map Coloring (CSP)</h2>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button className={`btn ${mode === '2player' ? 'btn-green' : ''}`} onClick={() => setMode('2player')}>
+        <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
           <Users size={18} className="inline-icon" /> 2 Player
         </button>
-        <button className={`btn ${mode === 'agent' ? 'btn-green' : ''}`} onClick={() => setMode('agent')}>
+        <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
           <Bot size={18} className="inline-icon" /> Agent vs Auto
         </button>
       </div>
@@ -175,7 +177,7 @@ export default function MapColoring() {
                 width: '40px', height: '40px',
                 borderRadius: '50%',
                 background: bg,
-                border: isSelected ? '2px solid var(--color-neon-amber)' : '2px solid #555',
+                border: isSelected ? '2px solid var(--color-accent)' : '2px solid #555',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: (board[n.id] === null && mode === '2player') ? 'pointer' : 'default',
                 color: board[n.id] !== null ? '#000' : 'var(--color-text-main)',
@@ -209,7 +211,7 @@ export default function MapColoring() {
       )}
 
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button className="btn btn-cyan" onClick={resetGame}>Restart Game</button>
+        <button className="btn btn-secondary" onClick={resetGame}>Restart Game</button>
       </div>
 
       {mode === 'agent' && (
