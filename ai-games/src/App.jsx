@@ -47,9 +47,12 @@ function App() {
                 className="menu-card"
                 onClick={() => setActiveGame(game.id)}
               >
+                <div style={{ width: '100%', height: '140px', overflow: 'hidden', borderRadius: '4px', marginBottom: '16px', backgroundColor: '#010409' }}>
+                    <img src={game.img} alt={game.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: '0.8' }} />
+                </div>
                 <h3>{game.name}</h3>
                 <p>{game.desc}</p>
-                <div className="btn btn-primary" style={{ marginTop: 'auto' }}>Play Now</div>
+                <div className="btn btn-primary" style={{ marginTop: 'auto', width: '100%' }}>Play Now</div>
               </div>
             ))}
           </div>
