@@ -125,14 +125,14 @@ export default function NQueens() {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
-      <h2 style={{ color: 'var(--color-primary)', marginBottom: '20px', textAlign: 'center' }}>N-Queens</h2>
+      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>N-Queens</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
         <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
-          <MousePointer2 size={18} className="inline-icon" /> Manual
+          <Users size={16} /> Manual
         </button>
         <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={18} className="inline-icon" /> Agent Solve
+          <Bot size={16} /> Agent Solve
         </button>
       </div>
 
@@ -140,18 +140,19 @@ export default function NQueens() {
 
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: `repeat(${SIZE}, 40px)`, 
-        gridTemplateRows: `repeat(${SIZE}, 40px)`,
+        gridTemplateColumns: `repeat(${SIZE}, 42px)`, 
         gap: '2px',
         justifyContent: 'center',
-        margin: '20px 0'
+        margin: '24px 0',
+        backgroundColor: 'var(--color-panel-border)',
+        padding: '2px',
+        borderRadius: '6px'
       }}>
         {Array.from({ length: SIZE }).map((_, r) => (
           Array.from({ length: SIZE }).map((__, c) => {
             const isPlaced = board[r] === c;
             const isClickableRow = mode === 'manual' && r === board.length;
             const isHint = hintCol !== null && isClickableRow && c === hintCol;
-            // Alternating checkerboard color just for visuals
             const isDark = (r + c) % 2 === 1;
 
             return (
@@ -160,32 +161,33 @@ export default function NQueens() {
                 style={{ 
                   width: '40px', height: '40px',
                   backgroundColor: isPlaced ? 'var(--color-primary)' : 
-                                   isHint ? 'var(--color-accent)' : 
-                                   isDark ? '#222' : '#444',
-                  border: isHint ? '2px solid var(--color-secondary)' : '1px solid #111',
+                                   isHint ? 'rgba(210, 153, 34, 0.4)' : 
+                                   isDark ? 'var(--color-bg)' : 'var(--color-panel)',
+                  border: isHint ? '2px solid var(--color-warning)' : '1px solid transparent',
                   cursor: isClickableRow ? 'pointer' : 'default',
-                  color: '#000',
+                  color: isPlaced ? '#fff' : 'var(--color-link)',
                   fontWeight: 'bold',
                   fontSize: '20px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '2px'
                 }}
                 onClick={() => handleCellClick(r, c)}
                 disabled={!isClickableRow}
                 title={isHint ? "Hint: Suggested placement" : ""}
               >
-                {isPlaced ? '♛' : ''}
+                {isPlaced ? '♛' : null}
               </button>
             )
           })
         ))}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '20px', gap: '10px', display: 'flex', justifyContent: 'center' }}>
-        <button className="btn btn-secondary" onClick={resetGame}>Restart</button>
+      <div style={{ textAlign: 'center', marginTop: '24px', gap: '8px', display: 'flex', justifyContent: 'center' }}>
+        <button className="btn" onClick={resetGame}>Restart</button>
         {mode === 'manual' && board.length > 0 && <button className="btn" onClick={undoMove}>Undo</button>}
         {mode === 'manual' && !isSolved && !isDeadEnd && (
-          <button className="btn btn-primary" onClick={provideHint}>
-            <Lightbulb size={18} className="inline-icon" /> Hint
+          <button className="btn btn-secondary" style={{ color: 'var(--color-warning)' }} onClick={provideHint}>
+            <Lightbulb size={16} /> Hint
           </button>
         )}
       </div>

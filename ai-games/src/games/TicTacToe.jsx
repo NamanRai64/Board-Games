@@ -121,34 +121,35 @@ export default function TicTacToe() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-secondary)', marginBottom: '20px', textAlign: 'center' }}>Tic-Tac-Toe</h2>
+      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Tic-Tac-Toe</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
         <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
-          <Users size={18} className="inline-icon" /> 2 Player
+          <Users size={16} /> 2 Player
         </button>
         <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={18} className="inline-icon" /> Agent vs Auto
+          <Bot size={16} /> Agent vs Auto
         </button>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ gridTemplateColumns: 'repeat(3, 100px)', gridTemplateRows: 'repeat(3, 100px)', width: 'fit-content' }}>
+      <div className="board-grid" style={{ gridTemplateColumns: 'repeat(3, 100px)', width: 'fit-content' }}>
         {board.map((cell, idx) => (
           <button 
             key={idx} 
             className={`cell ${cell ? 'active' : ''}`} 
             onClick={() => handleCellClick(idx)}
             disabled={!!winner || (mode === 'agent' && isAuto)}
+            style={{ fontSize: '2.5rem' }}
           >
-            {cell}
+            {cell === 'X' ? <span style={{ color: 'var(--color-link)' }}>X</span> : cell === 'O' ? <span style={{ color: 'var(--color-alert)' }}>O</span> : null}
           </button>
         ))}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button className="btn btn-secondary" onClick={resetGame}>Restart Game</button>
+      <div style={{ textAlign: 'center', marginTop: '24px' }}>
+        <button className="btn" onClick={resetGame}>Restart Game</button>
       </div>
 
       {mode === 'agent' && (

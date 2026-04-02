@@ -169,24 +169,23 @@ export default function Wumpus() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 style={{ color: 'var(--color-primary)', marginBottom: '20px' }}>Wumpus World</h2>
+      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px' }}>Wumpus World</h2>
       
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
         <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => { setMode('manual'); setIsAuto(false); }}>
-          <MousePointer2 size={18} className="inline-icon" /> Manual
+          <Users size={16} /> Manual
         </button>
         <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={18} className="inline-icon" /> Agent Solve
+          <Bot size={16} /> Agent Solve
         </button>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: `repeat(${SIZE}, 60px)`, 
-          gridTemplateRows: `repeat(${SIZE}, 60px)`,
           gap: '4px',
           background: 'var(--color-panel-border)',
           padding: '4px', borderRadius: '8px'
@@ -199,7 +198,6 @@ export default function Wumpus() {
               const Clickable = mode === 'manual' && isAdjacent && !status;
               const IsHint = hintMove && hintMove.r === r && hintMove.c === c;
 
-              // What's really there (for Dev/Agent but we only show if visited or over)
               const hasWumpus = world.wumpus.r === r && world.wumpus.c === c;
               const hasPit = world.pits.find(p => p.r === r && p.c === c);
               const hasGold = world.gold.r === r && world.gold.c === c;
@@ -210,19 +208,19 @@ export default function Wumpus() {
                 else if (hasPit) display = '🕳️';
                 else if (hasGold) display = '💰';
               }
-              if (isHero) display = '🤠'; // Hero overrides others
+              if (isHero) display = '🤠';
 
               return (
                 <button 
                   key={`${r}-${c}`}
                   style={{ 
                     width: '60px', height: '60px',
-                    backgroundColor: hasVisited ? 'var(--color-bg)' : '#333',
-                    border: IsHint ? '3px solid var(--color-accent)' : '1px solid #111',
+                    backgroundColor: hasVisited ? 'var(--color-bg)' : 'var(--color-panel)',
+                    border: IsHint ? '2px solid var(--color-warning)' : '1px solid transparent',
                     cursor: Clickable ? 'pointer' : 'default',
                     fontSize: '24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: Clickable ? '0 0 5px rgba(255,255,255,0.2)' : 'none'
+                    borderRadius: '4px'
                   }}
                   onClick={() => handleCellClick(r, c)}
                   disabled={!Clickable}
@@ -234,19 +232,19 @@ export default function Wumpus() {
           ))}
         </div>
 
-        <div className="glass-panel" style={{ width: '200px' }}>
-          <h4 style={{ color: 'var(--color-text-main)', marginBottom: '10px' }}>Sensors (Current Pos)</h4>
-          <div style={{ color: currentSensors.stench ? 'var(--color-alert)' : 'var(--color-text-muted)' }}>Stench: {currentSensors.stench ? 'YES' : 'NO'}</div>
-          <div style={{ color: currentSensors.breeze ? 'var(--color-secondary)' : 'var(--color-text-muted)' }}>Breeze: {currentSensors.breeze ? 'YES' : 'NO'}</div>
-          <div style={{ color: currentSensors.glitter ? 'var(--color-accent)' : 'var(--color-text-muted)' }}>Glitter: {currentSensors.glitter ? 'YES' : 'NO'}</div>
+        <div className="glass-panel" style={{ width: '220px', backgroundColor: 'var(--color-bg)' }}>
+          <h4 style={{ color: 'var(--color-text-main)', marginBottom: '12px', borderBottom: '1px solid var(--color-panel-border)', paddingBottom: '8px' }}>Sensors</h4>
+          <div style={{ color: currentSensors.stench ? 'var(--color-alert)' : 'var(--color-text-muted)', marginBottom: '4px' }}>Stench: {currentSensors.stench ? 'YES' : 'NO'}</div>
+          <div style={{ color: currentSensors.breeze ? 'var(--color-link)' : 'var(--color-text-muted)', marginBottom: '4px' }}>Breeze: {currentSensors.breeze ? 'YES' : 'NO'}</div>
+          <div style={{ color: currentSensors.glitter ? 'var(--color-warning)' : 'var(--color-text-muted)' }}>Glitter: {currentSensors.glitter ? 'YES' : 'NO'}</div>
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '20px', display: 'flex', gap: '10px' }}>
-        <button className="btn btn-secondary" onClick={resetGame}>Restart</button>
+      <div style={{ textAlign: 'center', marginTop: '24px', display: 'flex', gap: '8px' }}>
+        <button className="btn" onClick={resetGame}>Restart</button>
         {mode === 'manual' && !status && (
-          <button className="btn btn-primary" onClick={provideHint}>
-            <Lightbulb size={18} className="inline-icon" /> Hint
+          <button className="btn btn-secondary" style={{ color: 'var(--color-warning)' }} onClick={provideHint}>
+            <Lightbulb size={16} /> Hint
           </button>
         )}
       </div>

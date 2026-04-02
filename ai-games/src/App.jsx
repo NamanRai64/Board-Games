@@ -19,21 +19,21 @@ function App() {
   return (
     <>
       <header style={{
-        padding: '20px',
+        padding: '32px 20px',
         textAlign: 'center',
         borderBottom: activeGame ? '1px solid var(--color-panel-border)' : 'none',
-        background: 'var(--color-bg)'
+        background: 'var(--color-header-bg)'
       }}>
-        <h1 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '2.5rem', textShadow: 'var(--glow-primary)' }}>AI Arcade</h1>
-        <p style={{ color: 'var(--color-text-muted)', marginTop: '10px' }}>Explore classic AI algorithms.</p>
+        <h1 style={{ color: 'var(--color-text-main)', margin: 0, fontSize: '2rem' }}>AI Arcade</h1>
+        <p style={{ color: 'var(--color-text-muted)', marginTop: '8px' }}>Explore classic AI algorithms with interactive agents.</p>
         
         {activeGame && (
           <button 
-            className="btn btn-secondary" 
-            style={{ marginTop: '20px' }}
+            className="btn" 
+            style={{ marginTop: '24px' }}
             onClick={() => setActiveGame(null)}
           >
-            ← Back to Menu
+            ← Back to Games Menu
           </button>
         )}
       </header>

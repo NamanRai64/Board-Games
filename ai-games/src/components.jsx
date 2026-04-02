@@ -12,15 +12,15 @@ export function topNRandom(scoredMoves, n = 5) {
 export function StatusBanner({ status, message }) {
   if (!status) return null;
   
-  let colorClass = 'btn-secondary';
-  if (status === 'win') colorClass = 'btn-primary';
-  if (status === 'lose') colorClass = '';
-  if (status === 'thinking') colorClass = 'btn-secondary';
+  let typeClass = '';
+  if (status === 'win') typeClass = 'win';
+  if (status === 'lose') typeClass = 'lose';
+  if (status === 'thinking') typeClass = 'thinking';
 
   return (
-    <div className={`glass-panel ${colorClass} status-banner`} style={{ textAlign: 'center', marginBottom: '20px', fontWeight: '800', padding: '15px' }}>
-      {status === 'thinking' ? <BrainCircuit className="inline-icon spin" style={{ marginRight: '8px', verticalAlign: 'middle' }} /> : null}
-      <span style={{ verticalAlign: 'middle' }}>{message}</span>
+    <div className={`glass-panel status-banner ${typeClass}`} style={{ textAlign: 'left', marginBottom: '20px', fontWeight: '600', padding: '12px 16px', display: 'flex', alignItems: 'center' }}>
+      {status === 'thinking' ? <BrainCircuit size={18} className="spin" style={{ marginRight: '10px' }} /> : null}
+      <span>{message}</span>
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function WarningPopup({ message, onClose }) {
     if (!message) return;
     const t = setTimeout(() => {
       onClose();
-    }, 3000);
+    }, 4000);
     return () => clearTimeout(t);
   }, [message, onClose]);
 
@@ -39,7 +39,7 @@ export function WarningPopup({ message, onClose }) {
 
   return (
     <div className="custom-popup">
-      <AlertTriangle size={24} />
+      <AlertTriangle size={20} />
       <span>{message}</span>
     </div>
   );
@@ -49,37 +49,42 @@ export function AgentLogPanel({ moveResults, onStep, onAutoSolve, isAuto }) {
   if (!moveResults) return null;
 
   return (
-    <div className="glass-panel" style={{ marginTop: '20px' }}>
-      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', marginBottom: '15px' }}>
-        <Bot size={20} /> Agent Control
+    <div className="glass-panel" style={{ marginTop: '24px', backgroundColor: 'var(--color-bg)' }}>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-main)', marginBottom: '16px', fontSize: '1rem' }}>
+        <Bot size={18} /> Agent Control
       </h3>
       
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-        <button className="btn btn-secondary" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
-          <Play size={16} style={{ verticalAlign: 'middle', marginRight: '5px' }}/> Step
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <button className="btn" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
+          <Play size={14} /> Step
         </button>
         <button className="btn btn-primary" onClick={onAutoSolve} disabled={isAuto}>
-          <FastForward size={16} style={{ verticalAlign: 'middle', marginRight: '5px' }}/> Auto-Solve
+          <FastForward size={14} /> Auto-Solve
         </button>
       </div>
 
-      <div style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' }}>
-        <div style={{ color: 'var(--color-text-muted)', marginBottom: '5px' }}>Last Turn Analysis:</div>
+      <div style={{ background: '#010409', padding: '12px', border: '1px solid var(--color-panel-border)', borderRadius: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+        <div style={{ color: 'var(--color-text-muted)', marginBottom: '8px', fontSize: '0.8rem', fontWeight: '600' }}>AGENT LOG (LATEST ANALYSIS)</div>
         {moveResults.sorted && moveResults.sorted.map((m, idx) => {
           const isChosen = m === moveResults.chosen?.move;
-          const isTopN = moveResults.topN?.includes(m);
+          const isTopN = moveResults.topN?.some(tn => tn.move === m.move);
           let color = 'var(--color-text-muted)';
-          if (isChosen) color = 'var(--color-primary)';
-          else if (isTopN) color = 'var(--color-secondary)';
+          let fontWeight = '400';
+          if (isChosen) {
+            color = 'var(--color-primary)';
+            fontWeight = '600';
+          } else if (isTopN) {
+            color = 'var(--color-link)';
+          }
 
           return (
-            <div key={idx} style={{ color, display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-              <span>{isChosen ? '> ' : '  '}Move: {JSON.stringify(m.move)}</span>
+            <div key={idx} style={{ color, fontWeight, display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: 'var(--mono)', fontSize: '0.85rem', borderBottom: '1px solid #1c2128' }}>
+              <span>{isChosen ? '→ ' : '  '}Move: {JSON.stringify(m.move)}</span>
               <span>Score: {m.score}</span>
             </div>
           );
         })}
-        {!moveResults.sorted?.length && <div style={{ color: 'var(--color-text-muted)' }}>No valid moves evaluated yet.</div>}
+        {!moveResults.sorted?.length && <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>No valid moves found.</div>}
       </div>
     </div>
   );

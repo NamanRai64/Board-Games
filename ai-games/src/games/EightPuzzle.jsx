@@ -116,35 +116,39 @@ export default function EightPuzzle() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: 'var(--color-accent)', marginBottom: '20px', textAlign: 'center' }}>8-Puzzle</h2>
+      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>8-Puzzle</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
         <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>
-          <MousePointer2 size={18} className="inline-icon" /> Manual
+          <MousePointer2 size={16} /> Manual
         </button>
         <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={18} className="inline-icon" /> Agent Solve
+          <Bot size={16} /> Agent Solve
         </button>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ gridTemplateColumns: 'repeat(3, 80px)', gridTemplateRows: 'repeat(3, 80px)', width: 'fit-content' }}>
+      <div className="board-grid" style={{ gridTemplateColumns: 'repeat(3, 80px)', width: 'fit-content' }}>
         {board.map((tile, idx) => (
           <button 
             key={idx} 
-            className={`cell ${tile === 0 ? 'empty' : 'active'}`} 
+            className={`cell ${tile === 0 ? 'empty' : ''}`} 
             onClick={() => handleTileClick(idx)}
             disabled={tile === 0 || solved || (mode === 'agent')}
-            style={{ opacity: tile === 0 ? 0 : 1 }}
+            style={{ 
+              opacity: tile === 0 ? 0 : 1, 
+              color: 'var(--color-link)',
+              fontSize: '1.5rem'
+            }}
           >
             {tile}
           </button>
         ))}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button className="btn btn-secondary" onClick={shuffleBoard}>Shuffle Board</button>
+      <div style={{ textAlign: 'center', marginTop: '24px' }}>
+        <button className="btn" onClick={shuffleBoard}>Shuffle Board</button>
       </div>
 
       {mode === 'agent' && (

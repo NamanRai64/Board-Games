@@ -140,33 +140,32 @@ export default function MapColoring() {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
-      <h2 style={{ color: 'var(--color-primary)', marginBottom: '20px', textAlign: 'center' }}>Map Coloring (CSP)</h2>
+      <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Map Coloring (CSP)</h2>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
         <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
-          <Users size={18} className="inline-icon" /> 2 Player
+          <Users size={16} /> 2 Player
         </button>
         <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-          <Bot size={18} className="inline-icon" /> Agent vs Auto
+          <Bot size={16} /> Agent vs Auto
         </button>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div style={{ position: 'relative', width: '350px', height: '300px', margin: '40px auto', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-        {/* Draw Edges */}
+      <div style={{ position: 'relative', width: '350px', height: '300px', margin: '40px auto', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--color-panel-border)' }}>
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
           {EDGES.map((edge, idx) => {
             const A = NODES[edge[0]];
             const B = NODES[edge[1]];
-            return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-panel-border)" strokeWidth="3" />;
+            return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-panel-border)" strokeWidth="2" />;
           })}
         </svg>
 
         {/* Draw Nodes */}
         {NODES.map(n => {
           const isSelected = selectedNode === n.id;
-          const bg = board[n.id] !== null ? COLORS[board[n.id]] : '#111';
+          const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'var(--color-bg)';
           return (
             <div 
               key={n.id}
@@ -177,12 +176,12 @@ export default function MapColoring() {
                 width: '40px', height: '40px',
                 borderRadius: '50%',
                 background: bg,
-                border: isSelected ? '2px solid var(--color-accent)' : '2px solid #555',
+                border: isSelected ? '2px solid var(--color-link)' : '1px solid var(--color-panel-border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: (board[n.id] === null && mode === '2player') ? 'pointer' : 'default',
-                color: board[n.id] !== null ? '#000' : 'var(--color-text-main)',
+                color: board[n.id] !== null ? '#fff' : 'var(--color-text-main)',
                 fontWeight: 'bold', zIndex: 10,
-                boxShadow: board[n.id] !== null ? `0 0 10px ${bg}` : 'none'
+                boxShadow: isSelected ? '0 0 10px rgba(88, 166, 255, 0.3)' : 'none'
               }}
             >
               {n.label}
@@ -192,15 +191,15 @@ export default function MapColoring() {
       </div>
 
       {mode === '2player' && selectedNode !== null && (
-        <div className="glass-panel" style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h4>Choose a color for Region {NODES[selectedNode].label}</h4>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '10px' }}>
+        <div className="glass-panel" style={{ textAlign: 'center', marginBottom: '24px', backgroundColor: 'var(--color-bg)' }}>
+          <h4 style={{ marginBottom: '12px' }}>Choose a color for Region {NODES[selectedNode].label}</h4>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
             {COLORS.map((c, idx) => {
               const isValid = getValidColors(board, selectedNode).includes(idx);
               return (
                 <button 
                   key={idx} 
-                  style={{ width: '40px', height: '40px', background: c, borderRadius: '50%', opacity: isValid ? 1 : 0.2, cursor: isValid ? 'pointer' : 'not-allowed', border: 'none' }}
+                  style={{ width: '32px', height: '32px', background: c, borderRadius: '50%', opacity: isValid ? 1 : 0.15, cursor: isValid ? 'pointer' : 'not-allowed', border: isSelected ? '2px solid #fff' : 'none' }}
                   onClick={() => selectColor(idx)}
                   disabled={!isValid}
                 />
@@ -210,8 +209,8 @@ export default function MapColoring() {
         </div>
       )}
 
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button className="btn btn-secondary" onClick={resetGame}>Restart Game</button>
+      <div style={{ textAlign: 'center', marginTop: '24px' }}>
+        <button className="btn" onClick={resetGame}>Restart Game</button>
       </div>
 
       {mode === 'agent' && (
