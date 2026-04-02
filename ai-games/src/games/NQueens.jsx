@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
 import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
-const SIZE = 8;
-
 export default function NQueens() {
+  const [size, setSize] = useState(8);
   const [board, setBoard] = useState([]); // Array of column indices for each row
-  const [mode, setMode] = useState('manual'); // 'manual' or 'agent'
+  const [mode, setMode] = useState('manual'); 
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [hintCol, setHintCol] = useState(null);
@@ -24,25 +23,25 @@ export default function NQueens() {
 
   const getValidCols = (currentBoard, row) => {
     const valid = [];
-    for (let c = 0; c < SIZE; c++) {
+    for (let c = 0; c < size; c++) {
       if (isSafe(currentBoard, row, c)) valid.push(c);
     }
     return valid;
   };
 
   const computeScore = (currentBoard, row, col) => {
-    if (row === SIZE - 1) return 100; // Winning move
+    if (row === size - 1) return 100; // Winning move
     const testBoard = [...currentBoard, col];
-    return getValidCols(testBoard, row + 1).length; // Number of valid options in next row
+    return getValidCols(testBoard, row + 1).length; 
   };
 
   const calculateAgentMoves = (currentBoard) => {
     const currentRow = currentBoard.length;
-    if (currentRow >= SIZE) return null;
+    if (currentRow >= size) return null;
 
     const validCols = getValidCols(currentBoard, currentRow);
     const scoredMoves = validCols.map(col => ({
-      move: col, // the column choice for this row
+      move: col, 
       score: computeScore(currentBoard, currentRow, col)
     }));
 
@@ -50,7 +49,7 @@ export default function NQueens() {
   };
 
   const performAgentMove = () => {
-    if (board.length >= SIZE) {
+    if (board.length >= size) {
       setIsAuto(false);
       return;
     }
@@ -61,7 +60,6 @@ export default function NQueens() {
       setBoard([...board, result.chosen.move]);
       setHintCol(null);
     } else {
-      // Dead end
       setAgentLogs({ error: "Dead End reached. No valid moves.", sorted: [] });
       setIsAuto(false);
     }
@@ -79,16 +77,16 @@ export default function NQueens() {
 
   useEffect(() => {
     let timeout;
-    if (mode === 'agent' && isAuto && board.length < SIZE) {
+    if (mode === 'agent' && isAuto && board.length < size) {
       timeout = setTimeout(() => {
         performAgentMove();
       }, 400);
     }
     return () => clearTimeout(timeout);
-  }, [mode, isAuto, board]);
+  }, [mode, isAuto, board, size]);
 
   const handleCellClick = (row, col) => {
-    if (mode === 'agent' || isAuto || board.length !== row) return; // Can only place in the current row
+    if (mode === 'agent' || isAuto || board.length !== row) return; 
     
     if (isSafe(board, row, col)) {
       setBoard([...board, col]);
@@ -114,7 +112,7 @@ export default function NQueens() {
     setHintCol(null);
   };
 
-  const isSolved = board.length === SIZE;
+  const isSolved = board.length === size;
   const isDeadEnd = !isSolved && getValidCols(board, board.length).length === 0;
   
   let statusMsg = isSolved ? 'All Queens Placed Successfully!' : 
