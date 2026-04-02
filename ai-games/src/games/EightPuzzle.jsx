@@ -11,89 +11,91 @@ export default function EightPuzzle() {
   const [isAuto, setIsAuto] = useState(false);
 
   // Helper to shuffle board
+  const getGoal = (s) => {
+    const goal = [];
+    for (let i = 1; i < s * s; i++) goal.push(i);
+    goal.push(0);
+    return goal;
+  };
+
   const shuffleBoard = () => {
-    let newBoard = [...SOLVED_STATE];
-    // random valid walk
-    let emptyIdx = 8;
-    for (let i = 0; i < 100; i++) {
-      const moves = getValidMoves(newBoard);
-      const randomMove = moves[Math.floor(Math.random() * moves.length)];
-      newBoard = applyMove(newBoard, randomMove);
+    const goal = getGoal(size);
+    let current = [...goal];
+    for (let i = 0; i < 200; i++) {
+        const idx = current.indexOf(0);
+        const neighbors = [];
+        const r = Math.floor(idx / size), c = idx % size;
+        if (r > 0) neighbors.push(idx - size);
+        if (r < size - 1) neighbors.push(idx + size);
+        if (c > 0) neighbors.push(idx - 1);
+        if (c < size - 1) neighbors.push(idx + 1);
+        const move = neighbors[Math.floor(Math.random() * neighbors.length)];
+        [current[idx], current[move]] = [current[move], current[idx]];
     }
-    setBoard(newBoard);
-    setIsAuto(false);
+    setBoard(current);
+    setSolved(false);
     setAgentLogs(null);
+    setIsAuto(false);
   };
 
-  const isSolved = (currentBoard) => {
-    return currentBoard.every((val, idx) => val === SOLVED_STATE[idx]);
-  };
+  useEffect(() => {
+    shuffleBoard();
+  }, [size]);
 
-  const getValidMoves = (currentBoard) => {
-    const emptyIdx = currentBoard.indexOf(0);
-    const validMoves = [];
-    const row = Math.floor(emptyIdx / 3);
-    const col = emptyIdx % 3;
-
-    if (row > 0) validMoves.push(emptyIdx - 3); // Up
-    if (row < 2) validMoves.push(emptyIdx + 3); // Down
-    if (col > 0) validMoves.push(emptyIdx - 1); // Left
-    if (col < 2) validMoves.push(emptyIdx + 1); // Right
-    return validMoves;
-  };
-
-  const applyMove = (currentBoard, targetIdx) => {
-    const emptyIdx = currentBoard.indexOf(0);
-    const newBoard = [...currentBoard];
-    newBoard[emptyIdx] = newBoard[targetIdx];
-    newBoard[targetIdx] = 0;
-    return newBoard;
-  };
-
-  // Manhattan Distance Heuristic
-  const computeManhattan = (currentBoard) => {
-    let distance = 0;
-    for (let i = 0; i < 9; i++) {
-      const tile = currentBoard[i];
-      if (tile !== 0) {
-        const targetIdx = tile - 1;
-        const currentX = i % 3;
-        const currentY = Math.floor(i / 3);
-        const targetX = targetIdx % 3;
-        const targetY = Math.floor(targetIdx / 3);
-        distance += Math.abs(currentX - targetX) + Math.abs(currentY - targetY);
+  const getManhattan = (curr, targetSize) => {
+    let dist = 0;
+    for (let i = 0; i < curr.length; i++) {
+      const val = curr[i];
+      if (val !== 0) {
+        const targetIdx = val - 1;
+        const startR = Math.floor(i / targetSize), startC = i % targetSize;
+        const endR = Math.floor(targetIdx / targetSize), endC = targetIdx % targetSize;
+        dist += Math.abs(startR - endR) + Math.abs(startC - endC);
       }
     }
-    return distance;
+    return dist;
   };
 
   const performAgentMove = () => {
-    if (isSolved(board)) {
-      setIsAuto(false);
-      return;
+    if (solved) {
+        setIsAuto(false);
+        return;
     }
 
-    const validMoves = getValidMoves(board);
-    const scoredMoves = validMoves.map(moveIdx => {
-      const nextBoard = applyMove(board, moveIdx);
-      const h = computeManhattan(nextBoard);
-      // We want to minimize H, so we maximize -H
-      return { move: moveIdx, score: -h };
+    const idx = board.indexOf(0);
+    const r = Math.floor(idx / size), c = idx % size;
+    const moves = [];
+    if (r > 0) moves.push({ to: idx - size, name: 'Up' });
+    if (r < size - 1) moves.push({ to: idx + size, name: 'Down' });
+    if (c > 0) moves.push({ to: idx - 1, name: 'Left' });
+    if (c < size - 1) moves.push({ to: idx + 1, name: 'Right' });
+
+    const scored = moves.map(m => {
+        const nextBoard = [...board];
+        [nextBoard[idx], nextBoard[m.to]] = [nextBoard[m.to], nextBoard[idx]];
+        const score = getManhattan(nextBoard, size); // lower is better
+        return { move: m, score: -score }; // negate to make higher better for topNRandom
     });
 
-    const result = topNRandom(scoredMoves, 5); // Take top N (up to 4 really since only 4 moves)
+    const result = topNRandom(scored, 3);
     if (result && result.chosen) {
-      setAgentLogs({ ...result, chosen: { ...result.chosen } });
-      const nextBoard = applyMove(board, result.chosen.move);
-      setBoard(nextBoard);
+        setAgentLogs({ ...result, chosen: { ...result.chosen, move: result.chosen.move.name } });
+        const nextBoard = [...board];
+        const nextIdx = result.chosen.move.to;
+        [nextBoard[idx], nextBoard[nextIdx]] = [nextBoard[nextIdx], nextBoard[idx]];
+        setBoard(nextBoard);
+        if (JSON.stringify(nextBoard) === JSON.stringify(getGoal(size))) {
+            setSolved(true);
+            setIsAuto(false);
+        }
     } else {
-      setIsAuto(false);
+        setIsAuto(false);
     }
   };
 
   useEffect(() => {
     let timeout;
-    if (mode === 'agent' && isAuto && !isSolved(board)) {
+    if (mode === 'agent' && isAuto && !solved) {
       timeout = setTimeout(() => {
         performAgentMove();
       }, 300); // Faster for 8-puzzle
@@ -102,7 +104,7 @@ export default function EightPuzzle() {
   }, [mode, isAuto, board]);
 
   const handleTileClick = (idx) => {
-    if (mode === 'agent' || isSolved(board) || isAuto) return;
+    if (mode === 'agent' || solved || isAuto) return;
     const emptyIdx = board.indexOf(0);
     const validMoves = getValidMoves(board);
     if (validMoves.includes(idx)) {
