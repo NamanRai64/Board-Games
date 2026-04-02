@@ -2,52 +2,51 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
 import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
-const SIZE = 4;
-
-function generateWorld() {
-  const pits = [];
-  for (let i = 0; i < 3; i++) {
-    let r, c;
-    do {
-      r = Math.floor(Math.random() * SIZE);
-      c = Math.floor(Math.random() * SIZE);
-    } while ((r === 0 && c === 0) || pits.find(p => p.r === r && p.c === c));
-    pits.push({ r, c });
-  }
-
-  let wumpus;
-  do {
-    wumpus = { r: Math.floor(Math.random() * SIZE), c: Math.floor(Math.random() * SIZE) };
-  } while ((wumpus.r === 0 && wumpus.c === 0) || pits.find(p => p.r === wumpus.r && p.c === wumpus.c));
-
-  let gold;
-  do {
-    gold = { r: Math.floor(Math.random() * SIZE), c: Math.floor(Math.random() * SIZE) };
-  } while (
-    (gold.r === 0 && gold.c === 0) ||
-    pits.find(p => p.r === gold.r && p.c === gold.c) || 
-    (wumpus.r === gold.r && wumpus.c === gold.c)
-  );
-
-  return { pits, wumpus, gold };
-}
-
 export default function Wumpus() {
+  const [size, setSize] = useState(4);
   const [world, setWorld] = useState(null);
-  const [pos, setPos] = useState({ r: 0, c: 0 }); // start top-left
+  const [pos, setPos] = useState({ r: 0, c: 0 }); 
   const [visited, setVisited] = useState([{ r: 0, c: 0 }]);
-  const [mode, setMode] = useState('manual'); // 'manual' or 'agent'
+  const [mode, setMode] = useState('manual'); 
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
-  const [status, setStatus] = useState(null); // 'win', 'lose-pit', 'lose-wumpus'
+  const [status, setStatus] = useState(null); 
   const [hintMove, setHintMove] = useState(null);
+
+  const generateWorld = (s) => {
+    const pits = [];
+    for (let i = 0; i < Math.floor(s * 0.8); i++) {
+      let r, c;
+      do {
+        r = Math.floor(Math.random() * s);
+        c = Math.floor(Math.random() * s);
+      } while ((r === 0 && c === 0) || pits.find(p => p.r === r && p.c === c));
+      pits.push({ r, c });
+    }
+
+    let wumpus;
+    do {
+      wumpus = { r: Math.floor(Math.random() * s), c: Math.floor(Math.random() * s) };
+    } while ((wumpus.r === 0 && wumpus.c === 0) || pits.find(p => p.r === wumpus.r && p.c === wumpus.c));
+
+    let gold;
+    do {
+      gold = { r: Math.floor(Math.random() * s), c: Math.floor(Math.random() * s) };
+    } while (
+      (gold.r === 0 && gold.c === 0) ||
+      pits.find(p => p.r === gold.r && p.c === gold.c) || 
+      (wumpus.r === gold.r && wumpus.c === gold.c)
+    );
+
+    return { pits, wumpus, gold };
+  };
 
   useEffect(() => {
     resetGame();
-  }, []);
+  }, [size]);
 
   const resetGame = () => {
-    setWorld(generateWorld());
+    setWorld(generateWorld(size));
     setPos({ r: 0, c: 0 });
     setVisited([{ r: 0, c: 0 }]);
     setStatus(null);
@@ -61,14 +60,10 @@ export default function Wumpus() {
     let stench = false;
     let breeze = false;
     
-    // Check adjacents for Wumpus
     if (Math.abs(world.wumpus.r - r) + Math.abs(world.wumpus.c - c) === 1) stench = true;
-    
-    // Check adjacents for Pits
     for (let p of world.pits) {
       if (Math.abs(p.r - r) + Math.abs(p.c - c) === 1) breeze = true;
     }
-    
     return { stench, breeze, glitter: world.gold.r === r && world.gold.c === c };
   };
 
@@ -85,21 +80,21 @@ export default function Wumpus() {
       { r: pos.r, c: pos.c + 1, dir: 'Right' },
     ];
 
-    const validMoves = moves.filter(m => m.r >= 0 && m.r < SIZE && m.c >= 0 && m.c < SIZE);
+    const validMoves = moves.filter(m => m.r >= 0 && m.r < size && m.c >= 0 && m.c < size);
     const scoredMoves = validMoves.map(m => {
       let score = 0;
       if (isVisited(m.r, m.c)) {
         score = -1;
       } else {
-        score = 50; // Unvisited
+        score = 50; 
         if (breeze) score -= 1000;
         if (stench) score -= 20;
       }
       return { move: m, score };
     });
 
-    return topNRandom(scoredMoves, 5); // top valid logical choices
-  }, [pos, world, status, visited]);
+    return topNRandom(scoredMoves, 5); 
+  }, [pos, world, status, visited, size]);
 
   const applyMove = (r, c) => {
     setPos({ r, c });
