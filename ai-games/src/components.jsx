@@ -45,47 +45,57 @@ export function WarningPopup({ message, onClose }) {
   );
 }
 
-export function AgentLogPanel({ moveResults, onStep, onAutoSolve, isAuto }) {
+export function AgentLogPanel({ moveResults, onStep, onAutoSolve, isAuto, title = "Agent Analysis" }) {
   if (!moveResults) return null;
+
+  const showControls = onStep && onAutoSolve;
 
   return (
     <div className="glass-panel" style={{ marginTop: '24px', backgroundColor: 'var(--color-bg)' }}>
       <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-main)', marginBottom: '16px', fontSize: '1rem' }}>
-        <Bot size={18} /> Agent Control
+        <Bot size={18} /> {title}
       </h3>
       
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        <button className="btn" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
-          <Play size={14} /> Step
-        </button>
-        <button className="btn btn-primary" onClick={onAutoSolve} disabled={isAuto}>
-          <FastForward size={14} /> Auto-Solve
-        </button>
-      </div>
+      {showControls && !isAuto.toString().includes('pva') && (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <button className="btn" onClick={onStep} disabled={isAuto} title="Calculate and take 1 move">
+            <Play size={14} /> Step
+          </button>
+          <button className="btn btn-primary" onClick={onAutoSolve} disabled={isAuto}>
+            <FastForward size={14} /> Auto-Solve
+          </button>
+        </div>
+      )}
+
+      {isAuto === 'pva' && (
+        <div style={{ color: 'var(--color-link)', marginBottom: '16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <BrainCircuit size={14} className="spin" /> Agent is playing...
+        </div>
+      )}
 
       <div style={{ background: '#010409', padding: '12px', border: '1px solid var(--color-panel-border)', borderRadius: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-        <div style={{ color: 'var(--color-text-muted)', marginBottom: '8px', fontSize: '0.8rem', fontWeight: '600' }}>AGENT LOG (LATEST ANALYSIS)</div>
+        <div style={{ color: 'var(--color-text-muted)', marginBottom: '8px', fontSize: '0.75rem', fontWeight: '600' }}>LATEST AI LOG</div>
         {moveResults.sorted && moveResults.sorted.map((m, idx) => {
-          const isChosen = m === moveResults.chosen?.move;
-          const isTopN = moveResults.topN?.some(tn => tn.move === m.move);
+          const mStr = JSON.stringify(m.move);
+          const chosenStr = JSON.stringify(moveResults.chosen?.move);
+          const isChosen = mStr === chosenStr;
+          
           let color = 'var(--color-text-muted)';
           let fontWeight = '400';
           if (isChosen) {
             color = 'var(--color-primary)';
             fontWeight = '600';
-          } else if (isTopN) {
-            color = 'var(--color-link)';
           }
 
           return (
-            <div key={idx} style={{ color, fontWeight, display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: 'var(--mono)', fontSize: '0.85rem', borderBottom: '1px solid #1c2128' }}>
-              <span>{isChosen ? '→ ' : '  '}Move: {JSON.stringify(m.move)}</span>
+            <div key={idx} style={{ color, fontWeight, display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: 'var(--mono)', fontSize: '0.8rem', borderBottom: '1px solid #1c2128' }}>
+              <span>{isChosen ? '→ ' : '  '}Move: {mStr}</span>
               <span>Score: {m.score}</span>
             </div>
           );
         })}
-        {!moveResults.sorted?.length && <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>No valid moves found.</div>}
       </div>
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
 import { Users, Bot } from 'lucide-react';
 
@@ -6,29 +6,22 @@ export default function TicTacToe() {
   const [size, setSize] = useState(3);
   const [board, setBoard] = useState(Array(size * size).fill(null));
   const [isXNext, setIsXNext] = useState(true);
-  const [mode, setMode] = useState('2player'); 
+  const [mode, setMode] = useState('2player'); // '2player', 'pva', or 'agent'
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
 
-  useEffect(() => {
-    resetGame();
-  }, [size]);
-
   const calculateWinner = (squares) => {
     const lines = [];
-    // Rows
     for (let i = 0; i < size; i++) {
         const row = [];
         for (let j = 0; j < size; j++) row.push(i*size + j);
         lines.push(row);
     }
-    // Cols
     for (let i = 0; i < size; i++) {
         const col = [];
         for (let j = 0; j < size; j++) col.push(j*size + i);
         lines.push(col);
     }
-    // Diagonals
     const d1 = [];
     for (let i = 0; i < size; i++) d1.push(i*size + i);
     lines.push(d1);
@@ -45,10 +38,9 @@ export default function TicTacToe() {
 
   const winner = calculateWinner(board);
 
-  // Minimax with depth limit for larger boards
   const minimax = (squares, depth, isMaximizing, playerChar) => {
     const result = calculateWinner(squares);
-    const depthLimit = size === 3 ? 10 : 3; // Keep 4x4 fast
+    const depthLimit = size === 3 ? 10 : 3; 
 
     if (result === playerChar) return 10 - depth;
     if (result === (playerChar === 'X' ? 'O' : 'X')) return depth - 10;
@@ -78,51 +70,58 @@ export default function TicTacToe() {
     }
   };
 
-  const performAgentMove = () => {
+  const performAgentMove = useCallback(() => {
     if (winner) {
       setIsAuto(false);
       return;
     }
-
     const currentPlayer = isXNext ? 'X' : 'O';
-    let scoredMoves = [];
-
     const empty = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
-    // Limit move consideration for 4x4 to keep UI responsive
     const sample = size === 3 ? empty : empty.sort(() => Math.random() - 0.5).slice(0, 8);
-
+    let scoredMoves = [];
     for (let i of sample) {
       const newBoard = [...board];
       newBoard[i] = currentPlayer;
       let score = minimax(newBoard, 0, false, currentPlayer);
       scoredMoves.push({ move: i, score });
     }
-
     const result = topNRandom(scoredMoves, 5); 
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
-      const newBoard = [...board];
-      newBoard[result.chosen.move] = currentPlayer;
-      setBoard(newBoard);
-      setIsXNext(!isXNext);
+      const moveIdx = result.chosen.move;
+      setBoard(prev => {
+        const next = [...prev];
+        next[moveIdx] = currentPlayer;
+        return next;
+      });
+      setIsXNext(prev => !prev);
     } else {
       setIsAuto(false);
     }
-  };
+  }, [board, isXNext, winner, size]);
+
+  useEffect(() => {
+    resetGame();
+  }, [size]);
+
+  useEffect(() => {
+    if (mode === 'pva' && !isXNext && !winner) {
+      const timeout = setTimeout(() => performAgentMove(), 600);
+      return () => clearTimeout(timeout);
+    }
+  }, [mode, isXNext, winner, board, performAgentMove]);
 
   useEffect(() => {
     let timeout;
     if (mode === 'agent' && isAuto && !winner) {
-      timeout = setTimeout(() => {
-        performAgentMove();
-      }, 500); // delay for effect
+      timeout = setTimeout(() => performAgentMove(), 600);
     }
     return () => clearTimeout(timeout);
-  }, [mode, isAuto, board, isXNext, winner]);
+  }, [mode, isAuto, board, winner, performAgentMove]);
 
   const handleCellClick = (index) => {
     if (board[index] || winner || (mode === 'agent' && isAuto)) return;
-    
+    if (mode === 'pva' && !isXNext) return;
     const newBoard = [...board];
     newBoard[index] = isXNext ? 'X' : 'O';
     setBoard(newBoard);
@@ -142,15 +141,11 @@ export default function TicTacToe() {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h2 style={{ color: 'var(--color-text-main)', marginBottom: '24px', textAlign: 'center' }}>Tic-Tac-Toe</h2>
-      
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
-            2 Player
-          </button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-             Agent
-          </button>
+          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>PvP</button>
+          <button className={`btn ${mode === 'pva' ? 'btn-primary' : ''}`} onClick={() => setMode('pva')}>vs Agent</button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
         </div>
         <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
@@ -158,34 +153,19 @@ export default function TicTacToe() {
           <button className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
         </div>
       </div>
-
       <StatusBanner status={statusType} message={statusMsg} />
-
       <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 80px)`, width: 'fit-content' }}>
         {board.map((cell, idx) => (
-          <button 
-            key={idx} 
-            className={`cell ${cell ? 'active' : ''}`} 
-            onClick={() => handleCellClick(idx)}
-            disabled={!!winner || (mode === 'agent' && isAuto)}
-            style={{ fontSize: size === 3 ? '2rem' : '1.5rem', width: '80px', height: '80px' }}
-          >
+          <button key={idx} className={`cell ${cell ? 'active' : ''}`} onClick={() => handleCellClick(idx)} disabled={!!winner || (mode === 'agent' && isAuto) || (mode === 'pva' && !isXNext)} style={{ fontSize: size === 3 ? '2rem' : '1.5rem', width: '80px', height: '80px' }}>
             {cell === 'X' ? <span style={{ color: 'var(--color-link)' }}>X</span> : cell === 'O' ? <span style={{ color: 'var(--color-alert)' }}>O</span> : null}
           </button>
         ))}
       </div>
-
       <div style={{ textAlign: 'center', marginTop: '24px' }}>
         <button className="btn" onClick={resetGame}>Restart Game</button>
       </div>
-
-      {mode === 'agent' && (
-        <AgentLogPanel 
-          moveResults={agentLogs} 
-          onStep={performAgentMove} 
-          onAutoSolve={() => setIsAuto(true)} 
-          isAuto={isAuto || !!winner}
-        />
+      {(mode === 'agent' || mode === 'pva') && (
+        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || !!winner || mode === 'pva'} />
       )}
     </div>
   );

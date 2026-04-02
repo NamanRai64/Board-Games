@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
-import { Users, Bot } from 'lucide-react';
 
 const LEVELS = {
   easy: {
@@ -50,59 +49,50 @@ const COLORS = ['#58a6ff', '#238636', '#da3633', '#d29922']; // blue, green, red
 export default function MapColoring() {
   const [level, setLevel] = useState('easy');
   const { nodes, edges } = LEVELS[level];
-  const [board, setBoard] = useState(Array(nodes.length).fill(null)); 
+  const [board, setBoard] = useState(Array(LEVELS[level].nodes.length).fill(null)); 
   const [isP1Next, setIsP1Next] = useState(true);
-  const [mode, setMode] = useState('2player');
+  const [mode, setMode] = useState('2player'); // '2player', 'pva', 'agent'
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [warningMsg, setWarningMsg] = useState('');
 
-  useEffect(() => {
-    resetGame();
-  }, [level]);
-
-  const getNeighbors = (nId) => {
+  const getNeighbors = useCallback((nId) => {
     return edges.filter(e => e.includes(nId)).map(e => e[0] === nId ? e[1] : e[0]);
-  };
+  }, [edges]);
 
-  const getValidColors = (currentBoard, nId) => {
+  const getValidColors = useCallback((currentBoard, nId) => {
     const neighbors = getNeighbors(nId);
     const usedColors = neighbors.map(neighborId => currentBoard[neighborId]).filter(c => c !== null);
     return [0, 1, 2, 3].filter(c => !usedColors.includes(c)); 
-  };
+  }, [getNeighbors]);
 
-  const countOptionsForNeighbor = (currentBoard, neighborId) => {
+  const countOptionsForNeighbor = useCallback((currentBoard, neighborId) => {
     return getValidColors(currentBoard, neighborId).length;
-  };
+  }, [getValidColors]);
 
-  // Agent Logic: Least Constraining Value (LCV)
   const calculateAgentMoves = useCallback(() => {
     const uncolored = board.findIndex(c => c === null);
-    if (uncolored === -1) return null; // Fully colored
+    if (uncolored === -1) return null; 
 
     const validColorsForNode = getValidColors(board, uncolored);
-    if (validColorsForNode.length === 0) return null; // Dead end
+    if (validColorsForNode.length === 0) return null; 
 
     const scoredMoves = validColorsForNode.map(colorIdx => {
-      // Simulate assigning colorIdx
       const tempBoard = [...board];
       tempBoard[uncolored] = colorIdx;
-
       let score = 0;
       const neighbors = getNeighbors(uncolored);
       for (const nb of neighbors) {
         if (tempBoard[nb] === null) {
-          // LCV: sum of remaining valid colors for uncolored neighbors
           score += countOptionsForNeighbor(tempBoard, nb);
         }
       }
-
       return { move: { node: uncolored, color: colorIdx }, score };
     });
 
     return topNRandom(scoredMoves, 5);
-  }, [board]);
+  }, [board, getNeighbors, getValidColors, countOptionsForNeighbor]);
 
   const performAgentMove = useCallback(() => {
     if (!board.includes(null)) {
@@ -113,15 +103,38 @@ export default function MapColoring() {
     const result = calculateAgentMoves();
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
-      const newBoard = [...board];
-      newBoard[result.chosen.move.node] = result.chosen.move.color;
-      setBoard(newBoard);
-      setIsP1Next(!isP1Next);
+      const { node, color } = result.chosen.move;
+      setBoard(prev => {
+        const next = [...prev];
+        next[node] = color;
+        return next;
+      });
+      setIsP1Next(prev => !prev);
     } else {
-      setAgentLogs({ error: "Dead End. Cannot color the map.", sorted: [] });
+      setAgentLogs({ error: "Dead End reached. No valid colors.", sorted: [] });
       setIsAuto(false);
     }
-  }, [calculateAgentMoves, board, isP1Next]);
+  }, [calculateAgentMoves, board]);
+
+  const resetGame = useCallback(() => {
+    setBoard(Array(LEVELS[level].nodes.length).fill(null));
+    setIsP1Next(true);
+    setAgentLogs(null);
+    setIsAuto(false);
+    setSelectedNode(null);
+  }, [level]);
+
+  useEffect(() => {
+    resetGame();
+  }, [resetGame]);
+
+  // PVA Logic: Automatic agent turn
+  useEffect(() => {
+    if (mode === 'pva' && !isP1Next && board.includes(null)) {
+      const timeout = setTimeout(() => performAgentMove(), 600);
+      return () => clearTimeout(timeout);
+    }
+  }, [mode, isP1Next, board, performAgentMove]);
 
   useEffect(() => {
     let timeout;
@@ -132,10 +145,8 @@ export default function MapColoring() {
   }, [mode, isAuto, board, performAgentMove]);
 
   const handleNodeClick = (nId) => {
-    if (mode === 'agent' || isAuto) return;
-    if (board[nId] !== null) return; // already colored
-    
-    // In 2 player, user must select node first, then a color
+    if (mode === 'agent' || isAuto || (mode === 'pva' && !isP1Next)) return;
+    if (board[nId] !== null) return; 
     setSelectedNode(nId);
   };
 
@@ -147,20 +158,14 @@ export default function MapColoring() {
       return;
     }
 
-    const newBoard = [...board];
-    newBoard[selectedNode] = colorIdx;
-    setBoard(newBoard);
-    setIsP1Next(!isP1Next);
+    setBoard(prev => {
+      const next = [...prev];
+      next[selectedNode] = colorIdx;
+      return next;
+    });
+    setIsP1Next(prev => !prev);
     setSelectedNode(null);
     setAgentLogs(null);
-  };
-
-  const resetGame = () => {
-    setBoard(Array(nodes.length).fill(null));
-    setIsP1Next(true);
-    setAgentLogs(null);
-    setIsAuto(false);
-    setSelectedNode(null);
   };
 
   const isComplete = !board.includes(null);
@@ -181,12 +186,9 @@ export default function MapColoring() {
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>
-            2 Player
-          </button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>
-             Agent
-          </button>
+          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>PvP</button>
+          <button className={`btn ${mode === 'pva' ? 'btn-primary' : ''}`} onClick={() => setMode('pva')}>vs Agent</button>
+          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
         </div>
         <div style={{ borderLeft: '1px solid var(--color-panel-border)', paddingLeft: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Level:</span>
@@ -210,6 +212,7 @@ export default function MapColoring() {
         {nodes.map(n => {
           const isSelected = selectedNode === n.id;
           const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'var(--color-bg)';
+          const clickable = (board[n.id] === null && (mode === '2player' || (mode === 'pva' && isP1Next)));
           return (
             <div 
               key={n.id}
@@ -222,7 +225,7 @@ export default function MapColoring() {
                 background: bg,
                 border: isSelected ? '2px solid var(--color-link)' : '1px solid var(--color-panel-border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: (board[n.id] === null && mode === '2player') ? 'pointer' : 'default',
+                cursor: clickable ? 'pointer' : 'default',
                 color: board[n.id] !== null ? '#fff' : 'var(--color-text-main)',
                 fontWeight: 'bold', zIndex: 10,
                 fontSize: '12px'
@@ -234,7 +237,7 @@ export default function MapColoring() {
         })}
       </div>
 
-      {mode === '2player' && selectedNode !== null && (
+      {(mode === '2player' || mode === 'pva') && selectedNode !== null && (
         <div className="glass-panel" style={{ textAlign: 'center', marginBottom: '24px', backgroundColor: 'var(--color-bg)' }}>
           <h4 style={{ marginBottom: '12px' }}>Choose a color for Region {nodes[selectedNode].label}</h4>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
@@ -257,14 +260,16 @@ export default function MapColoring() {
         <button className="btn" onClick={resetGame}>Restart Game</button>
       </div>
 
-      {mode === 'agent' && (
-        <AgentLogPanel 
-          moveResults={agentLogs} 
-          onStep={performAgentMove} 
-          onAutoSolve={() => setIsAuto(true)} 
-          isAuto={isAuto || isComplete || hasDeadEnd}
-        />
-      )}
+      <div style={{ width: '100%' }}>
+        {(mode === 'agent' || mode === 'pva' || (mode === '2player' && agentLogs)) && (
+          <AgentLogPanel 
+            moveResults={agentLogs} 
+            onStep={performAgentMove} 
+            onAutoSolve={() => setIsAuto(true)} 
+            isAuto={isAuto || isComplete || hasDeadEnd || mode === 'pva'}
+          />
+        )}
+      </div>
     </div>
   );
 }

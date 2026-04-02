@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup } from '../components';
 import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
@@ -35,38 +35,40 @@ export default function NQueens() {
     return getValidCols(testBoard, row + 1).length; 
   };
 
-  const calculateAgentMoves = (currentBoard) => {
-    const currentRow = currentBoard.length;
+  const calculateAgentMoves = useCallback(() => {
+    const currentRow = board.length;
     if (currentRow >= size) return null;
 
-    const validCols = getValidCols(currentBoard, currentRow);
+    const validCols = getValidCols(board, currentRow);
     const scoredMoves = validCols.map(col => ({
       move: col, 
-      score: computeScore(currentBoard, currentRow, col)
+      score: computeScore(board, currentRow, col)
     }));
 
     return topNRandom(scoredMoves, 5);
-  };
+  }, [board, size]);
 
-  const performAgentMove = () => {
+  const performAgentMove = useCallback(() => {
     if (board.length >= size) {
       setIsAuto(false);
       return;
     }
 
-    const result = calculateAgentMoves(board);
+    const result = calculateAgentMoves();
     if (result && result.chosen) {
+      console.log(`N-Queens agent chose column ${result.chosen.move} for row ${board.length}`);
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
-      setBoard([...board, result.chosen.move]);
+      setBoard(prev => [...prev, result.chosen.move]);
       setHintCol(null);
     } else {
+      console.log("N-Queens agent hit dead end");
       setAgentLogs({ error: "Dead End reached. No valid moves.", sorted: [] });
       setIsAuto(false);
     }
-  };
+  }, [board, size, calculateAgentMoves]);
 
   const provideHint = () => {
-    const result = calculateAgentMoves(board);
+    const result = calculateAgentMoves();
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
       setHintCol(result.chosen.move);
@@ -83,7 +85,7 @@ export default function NQueens() {
       }, 400);
     }
     return () => clearTimeout(timeout);
-  }, [mode, isAuto, board, size]);
+  }, [mode, isAuto, board.length, size, performAgentMove]);
 
   const handleCellClick = (row, col) => {
     if (mode === 'agent' || isAuto || board.length !== row) return; 

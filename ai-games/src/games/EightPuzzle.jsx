@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
 
 export default function EightPuzzle() {
@@ -56,7 +56,7 @@ export default function EightPuzzle() {
     return dist;
   };
 
-  const performAgentMove = () => {
+  const performAgentMove = useCallback(() => {
     if (solved) {
         setIsAuto(false);
         return;
@@ -79,29 +79,38 @@ export default function EightPuzzle() {
 
     const result = topNRandom(scored, 3);
     if (result && result.chosen) {
-        setAgentLogs({ ...result, chosen: { ...result.chosen, move: result.chosen.move.name } });
-        const nextBoard = [...board];
+        console.log(`EightPuzzle agent chose move ${result.chosen.move.name}`);
+        setAgentLogs({ ...result, chosen: { ...result.chosen } });
         const nextIdx = result.chosen.move.to;
-        [nextBoard[idx], nextBoard[nextIdx]] = [nextBoard[nextIdx], nextBoard[idx]];
-        setBoard(nextBoard);
-        if (JSON.stringify(nextBoard) === JSON.stringify(getGoal(size))) {
-            setSolved(true);
-            setIsAuto(false);
-        }
+        
+        setBoard(prev => {
+            const next = [...prev];
+            const emptyIdx = next.indexOf(0);
+            [next[emptyIdx], next[nextIdx]] = [next[nextIdx], next[emptyIdx]];
+            return next;
+        });
+
+        // Check if solved AFTER updating board
+        setTimeout(() => {
+          setBoard(current => {
+            if (JSON.stringify(current) === JSON.stringify(getGoal(size))) setSolved(true);
+            return current;
+          });
+        }, 0);
     } else {
         setIsAuto(false);
     }
-  };
+  }, [board, size, solved]);
 
   useEffect(() => {
     let timeout;
     if (mode === 'agent' && isAuto && !solved) {
       timeout = setTimeout(() => {
         performAgentMove();
-      }, size === 3 ? 300 : 150); 
+      }, size === 3 ? 400 : 250); 
     }
     return () => clearTimeout(timeout);
-  }, [mode, isAuto, board, solved, size]);
+  }, [mode, isAuto, board, solved, size, performAgentMove]);
 
   const handleTileClick = (idx) => {
     if (mode === 'agent' || solved || isAuto) return;

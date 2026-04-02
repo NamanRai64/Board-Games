@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { topNRandom, AgentLogPanel, StatusBanner } from '../components';
-import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
 export default function Wumpus() {
   const [size, setSize] = useState(4);
@@ -13,7 +12,7 @@ export default function Wumpus() {
   const [status, setStatus] = useState(null); 
   const [hintMove, setHintMove] = useState(null);
 
-  const generateWorld = (s) => {
+  const generateWorld = useCallback((s) => {
     const pits = [];
     for (let i = 0; i < Math.floor(s * 0.8); i++) {
       let r, c;
@@ -39,13 +38,9 @@ export default function Wumpus() {
     );
 
     return { pits, wumpus, gold };
-  };
+  }, []);
 
-  useEffect(() => {
-    resetGame();
-  }, [size]);
-
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     setWorld(generateWorld(size));
     setPos({ r: 0, c: 0 });
     setVisited([{ r: 0, c: 0 }]);
@@ -53,7 +48,11 @@ export default function Wumpus() {
     setAgentLogs(null);
     setIsAuto(false);
     setHintMove(null);
-  };
+  }, [size, generateWorld]);
+
+  useEffect(() => {
+    resetGame();
+  }, [resetGame]);
 
   const getSensors = (r, c) => {
     if (!world) return {};
@@ -96,12 +95,15 @@ export default function Wumpus() {
     return topNRandom(scoredMoves, 5); 
   }, [pos, world, status, visited, size]);
 
-  const applyMove = (r, c) => {
+  const applyMove = useCallback((r, c) => {
     setPos({ r, c });
-    if (!isVisited(r, c)) setVisited(prev => [...prev, { r, c }]);
+    setVisited(prev => {
+        if (prev.some(v => v.r === r && v.c === c)) return prev;
+        return [...prev, { r, c }];
+    });
     setHintMove(null);
 
-    // Check game over
+    if (!world) return;
     if (world.wumpus.r === r && world.wumpus.c === c) {
       setStatus('lose-wumpus');
       setIsAuto(false);
@@ -112,18 +114,20 @@ export default function Wumpus() {
       setStatus('win');
       setIsAuto(false);
     }
-  };
+  }, [world]);
 
   const performAgentMove = useCallback(() => {
     if (status) return;
     const result = calculateAgentMoves();
     if (result && result.chosen) {
+      console.log(`Wumpus agent moving to row ${result.chosen.move.r}, col ${result.chosen.move.c}`);
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
       applyMove(result.chosen.move.r, result.chosen.move.c);
     } else {
+      console.log("Wumpus agent found no safe moves");
       setIsAuto(false);
     }
-  }, [calculateAgentMoves, status]);
+  }, [calculateAgentMoves, status, applyMove]);
 
   const provideHint = () => {
     const result = calculateAgentMoves();
@@ -145,7 +149,6 @@ export default function Wumpus() {
 
   const handleCellClick = (r, c) => {
     if (mode === 'agent' || isAuto || status) return;
-    // Check if adjacent
     if (Math.abs(r - pos.r) + Math.abs(c - pos.c) === 1) {
       applyMove(r, c);
       setAgentLogs(null);
