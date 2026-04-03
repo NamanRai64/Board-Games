@@ -185,16 +185,24 @@ export default function MapColoring() {
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="glass-panel" style={{ position: 'relative', width: '100%', maxWidth: '440px', height: '380px', margin: '40px auto', overflow: 'hidden', padding: 0 }}>
+      <div className="glass-panel" style={{ 
+        position: 'relative', 
+        width: '350px', 
+        height: '340px', 
+        margin: '40px auto', 
+        overflow: 'hidden', 
+        padding: 0,
+        background: 'rgba(0,0,0,0.2)'
+      }}>
         <svg style={{ position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none' }}>
           {edges.map((edge, idx) => {
             const A = nodes[edge[0]], B = nodes[edge[1]];
-            return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-border)" strokeWidth="2" strokeOpacity="0.5" />;
+            return <line key={idx} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="var(--color-border)" strokeWidth="2" strokeOpacity="0.4" />;
           })}
         </svg>
         {nodes.map(n => {
           const isSelected = selectedNode === n.id;
-          const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'rgba(255,255,255,0.02)';
+          const bg = board[n.id] !== null ? COLORS[board[n.id]] : 'rgba(255,255,255,0.03)';
           const active = (board[n.id] === null && (mode === '2player' || (mode === 'pva' && isP1Next)));
           return (
             <div key={n.id} onClick={() => handleNodeClick(n.id)} style={{ position: 'absolute', left: n.x - 20, top: n.y - 20, width: '40px', height: '40px', borderRadius: '50%', background: bg, border: isSelected ? '2px solid var(--color-link)' : '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: active ? 'pointer' : 'default', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 10, boxShadow: board[n.id] !== null ? `0 0 15px ${bg}88` : 'none' }}>

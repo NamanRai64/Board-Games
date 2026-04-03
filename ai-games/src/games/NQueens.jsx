@@ -148,14 +148,30 @@ export default function NQueens() {
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ gridTemplateColumns: `repeat(${size}, 1fr)`, width: '100%', maxWidth: '400px', margin: '32px auto' }}>
+      <div className="board-grid" style={{ 
+        display: 'grid',
+        gridTemplateColumns: `repeat(${size}, 50px)`, 
+        width: `${size * 55}px`, 
+        margin: '32px auto',
+        padding: '10px',
+        gap: '4px',
+        justifyContent: 'center'
+      }}>
         {Array(size * size).fill(null).map((_, i) => {
           const r = Math.floor(i / size), c = i % size;
           const isQueen = board[r] === c;
           const isCheck = (r + c) % 2 === 0;
           return (
-            <button key={i} className="cell" onClick={() => handleCellClick(r, c)} style={{ background: isQueen ? 'var(--color-surface-hover)' : (isCheck ? 'rgba(255,255,255,0.03)' : 'transparent'), minHeight: '40px', boxSizing: 'border-box' }} disabled={isAuto || mode === 'agent'}>
-              {isQueen && <Bot size={24} style={{ color: 'var(--color-link)' }} />}
+            <button key={i} className="cell" onClick={() => handleCellClick(r, c)} style={{ 
+              background: isQueen ? 'rgba(59, 130, 246, 0.2)' : (isCheck ? 'rgba(255,255,255,0.03)' : 'transparent'), 
+              width: '50px',
+              height: '50px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }} disabled={isAuto || mode === 'agent'}>
+              {isQueen && <Bot size={28} style={{ color: 'var(--color-link)', filter: 'drop-shadow(0 0 8px var(--color-glow-link))' }} />}
             </button>
           );
         })}
