@@ -43,15 +43,17 @@ export default function Wumpus() {
     else if (status === 'lose') setStats(prev => ({ ...prev, losses: prev.losses + 1 }));
   }, [status]);
 
-  const getPercepts = (x, y) => {
-    if (!world) return [];
+  const getPercepts = useCallback((x, y) => {
+    if (!world || !world[x] || !world[x][y]) return [];
     const p = [];
     if (world[x][y].gold) p.push('Glitter');
-    const neighbors = [[x-1,y],[x+1,y],[x,y-1],[x,y+1]].filter(([nx, ny]) => nx >=0 && nx < size && ny >= 0 && ny < size);
+    const neighbors = [[x-1,y],[x+1,y],[x,y-1],[x,y+1]].filter(([nx, ny]) => 
+      nx >= 0 && nx < size && ny >= 0 && ny < size && world[nx] && world[nx][ny]
+    );
     if (neighbors.some(([nx, ny]) => world[nx][ny].wumpus)) p.push('Stench');
     if (neighbors.some(([nx, ny]) => world[nx][ny].pit)) p.push('Breeze');
     return p;
-  };
+  }, [world, size]);
 
   const movePlayer = (dx, dy) => {
     if (status !== 'playing') return;
