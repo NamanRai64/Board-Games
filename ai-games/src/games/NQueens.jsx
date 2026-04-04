@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup, SessionStats } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup, SessionStats, ResultModal } from '../components';
 import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
 
 export default function NQueens() {
@@ -186,6 +186,11 @@ export default function NQueens() {
       {mode === 'agent' && (
         <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || isComplete} title="Least Constraining Matrix" />
       )}
+      <ResultModal 
+        status={isComplete ? 'win' : null} 
+        reason="The N-Queens interference has been resolved. Perfection attained."
+        onRestart={resetGame}
+      />
     </div>
   );
 }
