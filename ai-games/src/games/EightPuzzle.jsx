@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, SessionStats } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, SessionStats, ResultModal } from '../components';
 
 export default function EightPuzzle() {
   const [size, setSize] = useState(3);
@@ -199,6 +199,11 @@ export default function EightPuzzle() {
       {mode === 'agent' && (
         <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || solved} title="Entropy Reduction Matrix" />
       )}
+      <ResultModal 
+        status={solved ? 'win' : null} 
+        reason="The entropy has been neutralized. Grid aligned."
+        onRestart={shuffleBoard}
+      />
     </div>
   );
 }

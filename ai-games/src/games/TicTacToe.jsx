@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, SessionStats } from '../components';
+import { topNRandom, AgentLogPanel, StatusBanner, SessionStats, ResultModal } from '../components';
 
 export default function TicTacToe() {
   const [size, setSize] = useState(3);
@@ -212,6 +212,11 @@ export default function TicTacToe() {
           title={mode === 'pva' ? "The Opponent Thinker" : "Optimal Solver Matrix"} 
         />
       )}
+
+      <ResultModal 
+        status={winner === 'Draw' ? 'draw' : winner === 'X' ? 'win' : winner === 'O' ? 'lose' : null}
+        onRestart={resetGame}
+      />
     </div>
   );
 }

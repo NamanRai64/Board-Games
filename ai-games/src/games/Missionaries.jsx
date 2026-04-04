@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AgentLogPanel, StatusBanner, SessionStats } from '../components';
+import { AgentLogPanel, StatusBanner, SessionStats, ResultModal } from '../components';
 import { Ship, User, Skull, Info, Waves } from 'lucide-react';
 
 export default function Missionaries() {
@@ -140,6 +140,11 @@ export default function Missionaries() {
         .floating-slow { animation: float 5s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
       `}} />
+      <ResultModal 
+        status={status} 
+        reason={status === 'win' ? "All travelers have reached the safety of the East Bank." : "The balance of powers was lost. The mission has failed."}
+        onRestart={() => { setState({ ml: 3, cl: 3, mr: 0, cr: 0, boat: 'left' }); setStatus('playing'); setIsAuto(false); }}
+      />
     </div>
   );
 }
