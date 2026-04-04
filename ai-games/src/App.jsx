@@ -11,10 +11,10 @@ function App() {
 
   const games = [
     { id: 'tictactoe', name: 'Tic-Tac-Toe', desc: 'Face off against Minimax AI in 3x3 or 4x4 boards.', img: '/assets/tictactoe.png', component: <TicTacToe /> },
-    { id: 'missionaries', name: 'River Crossing', desc: 'Solve the Missionaries & Cannibals river puzzle using state-space search.', img: '/river_crossing.png', component: <Missionaries /> },
+    { id: 'missionaries', name: 'River Crossing', desc: 'Solve the Missionaries & Cannibals river puzzle using state-space search.', img: '/assets/river_crossing.png', component: <Missionaries /> },
     { id: 'eightpuzzle', name: '8-Puzzle', desc: 'Solve classic sliding tiles using Manhattan & Linear Conflict A* heuristics.', img: '/assets/eightpuzzle.png', component: <EightPuzzle /> },
     { id: 'nqueens', name: 'N-Queens', desc: 'Place queens safely on boards up to 12x12 using LCV constraint rules.', img: '/assets/nqueens.png', component: <NQueens /> },
-    { id: 'wumpus', name: 'Wumpus World', desc: 'Navigate treacherous pits using logical inference and sensor hints.', img: '/wumpus_new.png', component: <Wumpus /> },
+    { id: 'wumpus', name: 'Wumpus World', desc: 'Navigate treacherous pits using logical inference and sensor hints.', img: '/assets/wumpus_new.png', component: <Wumpus /> },
     { id: 'mapcoloring', name: 'Map Coloring', desc: 'Color graphs without neighbor conflicts using Constraint Satisfaction.', img: '/assets/mapcoloring.png', component: <MapColoring /> },
   ];
 
