@@ -6,7 +6,7 @@ export default function TicTacToe() {
   const [size, setSize] = useState(3);
   const [board, setBoard] = useState(Array(size * size).fill(null));
   const [isXNext, setIsXNext] = useState(true);
-  const [mode, setMode] = useState('2player');
+  const [mode, setMode] = useState('pva');
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [stats, setStats] = useState({ wins: 0, losses: 0, draws: 0 });
@@ -156,19 +156,18 @@ export default function TicTacToe() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>Tic-Tac-Toe</h2>
+      <h2 className="arcade-title">TIC_TAC_TOE //</h2>
 
       <SessionStats stats={stats} />
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>PvP</button>
-          <button className={`btn ${mode === 'pva' ? 'btn-primary' : ''}`} onClick={() => setMode('pva')}>vs Agent</button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${mode === '2player' ? 'active' : ''}`} onClick={() => setMode('2player')}>P2P</button>
+          <button className={`toggle-btn ${mode === 'pva' ? 'active' : ''}`} onClick={() => setMode('pva')}>P2A</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button key="3x3" className={`btn ${size === 3 ? 'btn-secondary' : ''}`} onClick={() => setSize(3)}>3x3</button>
-          <button key="4x4" className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => setSize(4)}>4x4</button>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${size === 3 ? 'active' : ''}`} onClick={() => setSize(3)}>3x3</button>
+          <button className={`toggle-btn ${size === 4 ? 'active' : ''}`} onClick={() => setSize(4)}>4x4</button>
         </div>
       </div>
 
@@ -206,13 +205,11 @@ export default function TicTacToe() {
         <button className="btn" style={{ padding: '12px 32px' }} onClick={resetGame}>Restart Session</button>
       </div>
 
-      {(mode === 'agent' || mode === 'pva') && (
+      {(mode === 'pva') && (
         <AgentLogPanel
           moveResults={agentLogs}
-          onStep={performAgentMove}
-          onAutoSolve={() => setIsAuto(true)}
-          isAuto={mode === 'pva' ? 'pva' : isAuto || !!winner}
-          title={mode === 'pva' ? "The Opponent Thinker" : "Optimal Solver Matrix"}
+          isAuto={isAuto || !!winner ? 'pva' : ''}
+          title="AGENT_TELEMETRY"
         />
       )}
 

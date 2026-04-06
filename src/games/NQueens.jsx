@@ -136,18 +136,18 @@ export default function NQueens() {
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
-      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>N-Queens</h2>
+      <h2 className="arcade-title">N_QUEENS //</h2>
 
       <SessionStats stats={stats} />
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>Manual</button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>AI Solver</button>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${mode === 'manual' ? 'active' : ''}`} onClick={() => setMode('manual')}>MANUAL</button>
+          <button className={`toggle-btn ${mode === 'agent' ? 'active' : ''}`} onClick={() => setMode('agent')}>AUTO</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
+        <div className="toggle-group">
           {[4, 6, 8, 12].map(n => (
-            <button key={n} className={`btn ${size === n ? 'btn-secondary' : ''}`} onClick={() => handleSetSize(n)}>{n}x{n}</button>
+            <button key={n} className={`toggle-btn ${size === n ? 'active' : ''}`} onClick={() => handleSetSize(n)}>{n}x{n}</button>
           ))}
         </div>
       </div>
@@ -184,13 +184,17 @@ export default function NQueens() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-        <button className="btn" onClick={undoMove}>Backtrack</button>
-        <button className="btn btn-secondary" onClick={provideHint}><Lightbulb size={16} /> Hint</button>
-        <button className="btn" onClick={resetGame}>Format Matrix</button>
+        <button className="btn-minimal" onClick={undoMove}>[BACKTRACK]</button>
+        <button className="btn-minimal" onClick={provideHint}>[HINT]</button>
+        <button className="btn-minimal" onClick={resetGame}>[FORMAT]</button>
       </div>
 
       {mode === 'agent' && (
-        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || isComplete} title="Least Constraining Matrix" />
+        <AgentLogPanel
+          moveResults={agentLogs}
+          isAuto={isAuto || isComplete ? 'pva' : ''}
+          title="AGENT_TELEMETRY"
+        />
       )}
       <ResultModal
         status={isComplete ? 'win' : null}

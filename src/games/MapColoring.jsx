@@ -132,18 +132,17 @@ export default function MapColoring() {
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
-      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>Map Coloring</h2>
+      <h2 className="arcade-title">MAP_COLORING //</h2>
 
       <SessionStats stats={stats} />
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className={`btn ${mode === '2player' ? 'btn-primary' : ''}`} onClick={() => setMode('2player')}>PvP</button>
-          <button className={`btn ${mode === 'pva' ? 'btn-primary' : ''}`} onClick={() => setMode('pva')}>vs Agent</button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${mode === '2player' ? 'active' : ''}`} onClick={() => setMode('2player')}>P2P</button>
+          <button className={`toggle-btn ${mode === 'pva' ? 'active' : ''}`} onClick={() => setMode('pva')}>P2A</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
-          {['easy', 'medium', 'hard'].map(l => <button key={l} className={`btn ${level === l ? 'btn-secondary' : ''}`} onClick={() => resetGame(l)}>{l.toUpperCase()}</button>)}
+        <div className="toggle-group">
+          {['easy', 'medium', 'hard'].map(l => <button key={l} className={`toggle-btn ${level === l ? 'active' : ''}`} onClick={() => resetGame(l)}>{l.toUpperCase()}</button>)}
         </div>
       </div>
 
@@ -192,8 +191,12 @@ export default function MapColoring() {
         <button className="btn" style={{ padding: '12px 32px' }} onClick={resetGame}>Restart Session</button>
       </div>
 
-      {(mode === 'agent' || mode === 'pva') && (
-        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={mode === 'pva' ? 'pva' : isAuto || isComplete || hasDeadEnd} title="Constraint Propagation Log" />
+      {(mode === 'pva') && (
+        <AgentLogPanel
+          moveResults={agentLogs}
+          isAuto={isAuto || isComplete || hasDeadEnd ? 'pva' : ''}
+          title="AGENT_TELEMETRY"
+        />
       )}
       <ResultModal
         status={isComplete ? 'win' : hasDeadEnd ? 'lose' : null}

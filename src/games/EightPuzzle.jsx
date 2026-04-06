@@ -149,18 +149,18 @@ export default function EightPuzzle() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>8-Puzzle</h2>
+      <h2 className="arcade-title">EIGHT_PUZZLE //</h2>
 
       <SessionStats stats={stats} />
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className={`btn ${mode === 'manual' ? 'btn-primary' : ''}`} onClick={() => setMode('manual')}>Manual</button>
-          <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>AI Solver</button>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${mode === 'manual' ? 'active' : ''}`} onClick={() => setMode('manual')}>MANUAL</button>
+          <button className={`toggle-btn ${mode === 'agent' ? 'active' : ''}`} onClick={() => setMode('agent')}>AUTO</button>
         </div>
-        <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
-          <button className={`btn ${size === 3 ? 'btn-secondary' : ''}`} onClick={() => handleSetSize(3)}>3x3</button>
-          <button className={`btn ${size === 4 ? 'btn-secondary' : ''}`} onClick={() => handleSetSize(4)}>4x4</button>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${size === 3 ? 'active' : ''}`} onClick={() => handleSetSize(3)}>3x3</button>
+          <button className={`toggle-btn ${size === 4 ? 'active' : ''}`} onClick={() => handleSetSize(4)}>4x4</button>
         </div>
       </div>
 
@@ -203,7 +203,11 @@ export default function EightPuzzle() {
       </div>
 
       {mode === 'agent' && (
-        <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || solved} title="Entropy Reduction Matrix" />
+        <AgentLogPanel
+          moveResults={agentLogs}
+          isAuto={isAuto || solved ? 'pva' : ''}
+          title="AGENT_TELEMETRY"
+        />
       )}
       <ResultModal
         status={solved ? 'win' : null}

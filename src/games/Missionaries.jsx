@@ -82,7 +82,7 @@ export default function Missionaries() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-      <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>River Crossing</h2>
+      <h2 className="arcade-title">RIVER_CROSSING //</h2>
       <SessionStats stats={stats} />
       <StatusBanner status={status === 'win' ? 'win' : status === 'lose' ? 'lose' : 'thinking'} message={status === 'win' ? 'All souls preserved!' : status === 'lose' ? 'The Balance is broken. Game Over.' : `River Crossing: ${state.boat.toUpperCase()} Side`} />
 
@@ -123,16 +123,19 @@ export default function Missionaries() {
       <div style={{ textAlign: 'center' }}>
         {status === 'playing' && (
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
-            <button className="btn" onClick={() => move(1, 0)}>+1 User</button>
-            <button className="btn" onClick={() => move(2, 0)}>+2 Users</button>
-            <button className="btn" onClick={() => move(0, 1)}>+1 Skull</button>
-            <button className="btn" onClick={() => move(0, 2)}>+2 Skulls</button>
-            <button className="btn" onClick={() => move(1, 1)}>1 User + 1 Skull</button>
+            <button className="btn-minimal" onClick={() => move(1, 0)}>[+1 USER]</button>
+            <button className="btn-minimal" onClick={() => move(2, 0)}>[+2 USERS]</button>
+            <button className="btn-minimal" onClick={() => move(0, 1)}>[+1 SKULL]</button>
+            <button className="btn-minimal" onClick={() => move(0, 2)}>[+2 SKULLS]</button>
+            <button className="btn-minimal" onClick={() => move(1, 1)}>[1 USER + 1 SKULL]</button>
           </div>
         )}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-          <button className="btn btn-secondary" onClick={() => setIsAuto(!isAuto)}>{isAuto ? 'Pause Drive' : 'Engage Automated Search'}</button>
-          <button className="btn" onClick={() => setState({ ml: 3, cl: 3, mr: 0, cr: 0, boat: 'left' })}>Reset Simulator</button>
+          <div className="toggle-group">
+            <button className={`toggle-btn ${!isAuto ? 'active' : ''}`} onClick={() => setIsAuto(false)}>MANUAL</button>
+            <button className={`toggle-btn ${isAuto ? 'active' : ''}`} onClick={() => setIsAuto(true)}>AUTO</button>
+          </div>
+          <button className="btn-minimal" onClick={() => setState({ ml: 3, cl: 3, mr: 0, cr: 0, boat: 'left' })}>[RESET TRACE]</button>
         </div>
       </div>
       <style dangerouslySetInnerHTML={{

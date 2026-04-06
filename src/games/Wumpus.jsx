@@ -72,30 +72,23 @@ export default function Wumpus() {
   const currentP = getPercepts(player.x, player.y, world);
 
   return (
-    <div style={{ padding: '0 20px 60px', maxWidth: '1100px', margin: '0 auto', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
-      <header style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <h2 className="arcade-title" style={{ fontSize: '3rem', marginBottom: '12px' }}>Wumpus World</h2>
-        <p style={{ color: '#888', fontSize: '1.1rem' }}>Logical inference in a dark cavern.</p>
-      </header>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2 className="arcade-title">WUMPUS_WORLD //</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 340px', gap: '60px', alignItems: 'start' }}>
 
         {/* Left: The Board */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
             padding: '16px',
-            borderRadius: '24px',
-            boxShadow: '0 30px 60px rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(10px)'
+            borderRadius: '4px'
           }}>
             <div style={{
               display: 'grid',
               gridTemplateColumns: `repeat(${size}, 1fr)`,
-              gap: '3px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '12px',
+              gap: '4px',
               overflow: 'hidden',
               aspectRatio: '1/1'
             }}>
@@ -151,21 +144,19 @@ export default function Wumpus() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="toggle-group">
               {[4, 5, 6].map(s => (
                 <button
                   key={s}
                   onClick={() => resetGame(s)}
-                  className={`btn ${size === s ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ padding: '8px 16px', fontSize: '0.9rem', borderRadius: '10px', border: 'none', background: size === s ? 'var(--color-primary)' : 'transparent' }}
+                  className={`toggle-btn ${size === s ? 'active' : ''}`}
                 >
                   {s}x{s}
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button className="btn btn-secondary" onClick={() => resetGame()} style={{ borderRadius: '12px' }}>RESET</button>
-              <button className="btn btn-primary" onClick={() => resetGame()} style={{ borderRadius: '12px' }}>NEW GAME</button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-minimal" onClick={() => resetGame()}>[NEW_SIMULATION]</button>
             </div>
           </div>
         </div>
@@ -186,15 +177,15 @@ export default function Wumpus() {
             </div>
           </div>
 
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '32px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center' }}>
-            <div className="mono" style={{ fontSize: '0.8rem', color: '#555', marginBottom: '32px', letterSpacing: '0.2em' }}>CONTROLS</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '200px', margin: '0 auto' }}>
+          <div style={{ background: 'var(--color-surface)', padding: '24px', borderRadius: '4px', border: '1px solid var(--color-border)', textAlign: 'center' }}>
+            <div className="mono" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '24px', letterSpacing: '0.1em' }}>CONTROLS</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', maxWidth: '160px', margin: '0 auto' }}>
               <div />
-              <button className="btn btn-secondary ctrl-btn" onClick={() => movePlayer(-1, 0)}><ChevronUp /></button>
+              <button className="btn ctrl-btn" onClick={() => movePlayer(-1, 0)}><ChevronUp /></button>
               <div />
-              <button className="btn btn-secondary ctrl-btn" onClick={() => movePlayer(0, -1)}><ChevronLeft /></button>
-              <button className="btn btn-secondary ctrl-btn" onClick={() => movePlayer(1, 0)}><ChevronDown /></button>
-              <button className="btn btn-secondary ctrl-btn" onClick={() => movePlayer(0, 1)}><ChevronRight /></button>
+              <button className="btn ctrl-btn" onClick={() => movePlayer(0, -1)}><ChevronLeft /></button>
+              <button className="btn ctrl-btn" onClick={() => movePlayer(1, 0)}><ChevronDown /></button>
+              <button className="btn ctrl-btn" onClick={() => movePlayer(0, 1)}><ChevronRight /></button>
             </div>
           </div>
         </div>
@@ -207,8 +198,7 @@ export default function Wumpus() {
       />
 
       <style>{`
-        .ctrl-btn { width: 60px; height: 60px; padding: 0; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
-        .ctrl-btn:hover { background: rgba(255,255,255,0.1); }
+        .ctrl-btn { width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; }
       `}</style>
     </div>
   );
