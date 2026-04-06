@@ -95,22 +95,16 @@ export default function EightPuzzle() {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
       const emptyIdxBefore = idx;
       const nextTargetIdx = result.chosen.move.to;
-      setBoard(prev => {
-        const next = [...prev];
-        const emptyIdx = next.indexOf(0);
-        [next[emptyIdx], next[nextTargetIdx]] = [next[nextTargetIdx], next[emptyIdx]];
-        return next;
-      });
+      const nextBoard = [...board];
+      const emptyIdx = nextBoard.indexOf(0);
+      [nextBoard[emptyIdx], nextBoard[nextTargetIdx]] = [nextBoard[nextTargetIdx], nextBoard[emptyIdx]];
+      setBoard(nextBoard);
       setPrevMoveIdx(emptyIdxBefore);
-      setTimeout(() => {
-        setBoard(current => {
-          if (JSON.stringify(current) === JSON.stringify(getGoal(size))) {
-            setSolved(true);
-            setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
-          }
-          return current;
-        });
-      }, 0);
+
+      if (JSON.stringify(nextBoard) === JSON.stringify(getGoal(size))) {
+        setSolved(true);
+        setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
+      }
     } else {
       setIsAuto(false);
     }
@@ -130,15 +124,13 @@ export default function EightPuzzle() {
     const r = Math.floor(idx / size), c = idx % size;
     const er = Math.floor(emptyIdx / size), ec = emptyIdx % size;
     if (Math.abs(r - er) + Math.abs(c - ec) === 1) {
-      setBoard(prev => {
-        const next = [...prev];
-        [next[emptyIdx], next[idx]] = [next[idx], next[emptyIdx]];
-        if (JSON.stringify(next) === JSON.stringify(getGoal(size))) {
-          setSolved(true);
-          setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
-        }
-        return next;
-      });
+      const nextBoard = [...board];
+      [nextBoard[emptyIdx], nextBoard[idx]] = [nextBoard[idx], nextBoard[emptyIdx]];
+      setBoard(nextBoard);
+      if (JSON.stringify(nextBoard) === JSON.stringify(getGoal(size))) {
+        setSolved(true);
+        setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
+      }
       setPrevMoveIdx(null);
     }
   };

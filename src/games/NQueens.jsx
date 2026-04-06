@@ -61,12 +61,13 @@ export default function NQueens() {
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
       const { row, col } = result.chosen.move;
-      setBoard(prev => {
-        const next = [...prev];
-        next[row] = col;
-        if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
-        return next;
-      });
+      const nextBoard = [...board];
+      nextBoard[row] = col;
+      setBoard(nextBoard);
+
+      if (!nextBoard.includes(null) && nextBoard.length > 0) {
+        setStats(s => ({ ...s, wins: s.wins + 1 }));
+      }
     } else {
       setWarningMsg("AI reached a conflict state. Backtrack needed.");
       setIsAuto(false);
@@ -94,12 +95,13 @@ export default function NQueens() {
       setWarningMsg("Collision! Safe zones only.");
       return;
     }
-    setBoard(prev => {
-      const next = [...prev];
-      next[row] = col;
-      if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
-      return next;
-    });
+    const nextBoard = [...board];
+    nextBoard[row] = col;
+    setBoard(nextBoard);
+
+    if (!nextBoard.includes(null) && nextBoard.length > 0) {
+      setStats(s => ({ ...s, wins: s.wins + 1 }));
+    }
     setAgentLogs(null);
   };
 

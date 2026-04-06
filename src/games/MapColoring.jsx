@@ -58,13 +58,13 @@ export default function MapColoring() {
     if (result && result.chosen) {
       setAgentLogs({ ...result, chosen: { ...result.chosen } });
       const { node, color } = result.chosen.move;
-      setBoard(prev => {
-        const next = [...prev];
-        next[node] = color;
-        if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
-        return next;
-      });
+      const nextBoard = [...board];
+      nextBoard[node] = color;
+      setBoard(nextBoard);
       setIsP1Next(prev => !prev);
+      if (!nextBoard.includes(null) && nextBoard.length > 0) {
+        setStats(s => ({ ...s, wins: s.wins + 1 }));
+      }
     } else {
       setAgentLogs({ error: "Dead End reached. Potential Conflict.", sorted: [] });
       setIsAuto(false);
@@ -113,14 +113,14 @@ export default function MapColoring() {
       setWarningMsg("Collision Alert! Neighbor uses this frequency.");
       return;
     }
-    setBoard(prev => {
-      const next = [...prev];
-      next[selectedNode] = colorIdx;
-      if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
-      return next;
-    });
+    const nextBoard = [...board];
+    nextBoard[selectedNode] = colorIdx;
+    setBoard(nextBoard);
     setIsP1Next(prev => !prev);
     setSelectedNode(null);
+    if (!nextBoard.includes(null) && nextBoard.length > 0) {
+      setStats(s => ({ ...s, wins: s.wins + 1 }));
+    }
   };
 
   const isComplete = !board.includes(null);
