@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup, SessionStats, ResultModal } from '../components';
+import { useState, useEffect, useCallback } from 'react';
+import { topNRandom } from '../utils';
+import { AgentLogPanel, StatusBanner, WarningPopup, SessionStats, ResultModal } from '../components';
 import MAP_LEVELS from './mapLevels';
 
 const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f59e0b']; // blue, emerald, rose, amber
@@ -8,9 +9,9 @@ export default function MapColoring() {
   const [level, setLevel] = useState('easy');
   const [currentLevelData, setCurrentLevelData] = useState(MAP_LEVELS.easy[0]);
   const { nodes, edges } = currentLevelData;
-  const [board, setBoard] = useState(Array(nodes.length).fill(null)); 
+  const [board, setBoard] = useState(Array(nodes.length).fill(null));
   const [isP1Next, setIsP1Next] = useState(true);
-  const [mode, setMode] = useState('2player'); 
+  const [mode, setMode] = useState('2player');
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -24,7 +25,7 @@ export default function MapColoring() {
   const getValidColors = useCallback((currentBoard, nId) => {
     const neighbors = getNeighbors(nId);
     const usedColors = neighbors.map(neighborId => currentBoard[neighborId]).filter(c => c !== null);
-    return [0, 1, 2, 3].filter(c => !usedColors.includes(c)); 
+    return [0, 1, 2, 3].filter(c => !usedColors.includes(c));
   }, [getNeighbors]);
 
   const countOptionsForNeighbor = useCallback((currentBoard, neighborId) => {
@@ -33,9 +34,9 @@ export default function MapColoring() {
 
   const calculateAgentMoves = useCallback(() => {
     const uncolored = board.findIndex(c => c === null);
-    if (uncolored === -1) return null; 
+    if (uncolored === -1) return null;
     const validColorsForNode = getValidColors(board, uncolored);
-    if (validColorsForNode.length === 0) return null; 
+    if (validColorsForNode.length === 0) return null;
     const scoredMoves = validColorsForNode.map(colorIdx => {
       const tempBoard = [...board];
       tempBoard[uncolored] = colorIdx;
@@ -60,6 +61,7 @@ export default function MapColoring() {
       setBoard(prev => {
         const next = [...prev];
         next[node] = color;
+        if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
         return next;
       });
       setIsP1Next(prev => !prev);
@@ -69,8 +71,10 @@ export default function MapColoring() {
     }
   }, [calculateAgentMoves, board]);
 
-  const resetGame = useCallback(() => {
-    const sets = MAP_LEVELS[level];
+  const resetGame = useCallback((newLevel) => {
+    const l = typeof newLevel === 'string' ? newLevel : level;
+    if (typeof newLevel === 'string') setLevel(l);
+    const sets = MAP_LEVELS[l];
     const randIdx = Math.floor(Math.random() * sets.length);
     const newLevelData = sets[randIdx];
     setCurrentLevelData(newLevelData);
@@ -81,11 +85,7 @@ export default function MapColoring() {
     setSelectedNode(null);
   }, [level]);
 
-  useEffect(() => { resetGame(); }, [level]);
 
-  useEffect(() => {
-    if (!board.includes(null) && board.length > 0) setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
-  }, [board]);
 
   useEffect(() => {
     if (mode === 'pva' && !isP1Next && board.includes(null)) {
@@ -102,7 +102,7 @@ export default function MapColoring() {
 
   const handleNodeClick = (nId) => {
     if (mode === 'agent' || isAuto || (mode === 'pva' && !isP1Next)) return;
-    if (board[nId] !== null) return; 
+    if (board[nId] !== null) return;
     setSelectedNode(nId);
   };
 
@@ -116,6 +116,7 @@ export default function MapColoring() {
     setBoard(prev => {
       const next = [...prev];
       next[selectedNode] = colorIdx;
+      if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
       return next;
     });
     setIsP1Next(prev => !prev);
@@ -132,7 +133,7 @@ export default function MapColoring() {
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
       <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>Map Coloring</h2>
-      
+
       <SessionStats stats={stats} />
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
@@ -142,18 +143,18 @@ export default function MapColoring() {
           <button className={`btn ${mode === 'agent' ? 'btn-primary' : ''}`} onClick={() => setMode('agent')}>Solver</button>
         </div>
         <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
-          {['easy', 'medium', 'hard'].map(l => <button key={l} className={`btn ${level === l ? 'btn-secondary' : ''}`} onClick={() => setLevel(l)}>{l.toUpperCase()}</button>)}
+          {['easy', 'medium', 'hard'].map(l => <button key={l} className={`btn ${level === l ? 'btn-secondary' : ''}`} onClick={() => resetGame(l)}>{l.toUpperCase()}</button>)}
         </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="glass-panel" style={{ 
-        position: 'relative', 
-        width: '350px', 
-        height: '340px', 
-        margin: '40px auto', 
-        overflow: 'hidden', 
+      <div className="glass-panel" style={{
+        position: 'relative',
+        width: '350px',
+        height: '340px',
+        margin: '40px auto',
+        overflow: 'hidden',
         padding: 0,
         background: 'rgba(0,0,0,0.2)'
       }}>
@@ -194,8 +195,8 @@ export default function MapColoring() {
       {(mode === 'agent' || mode === 'pva') && (
         <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={mode === 'pva' ? 'pva' : isAuto || isComplete || hasDeadEnd} title="Constraint Propagation Log" />
       )}
-      <ResultModal 
-        status={isComplete ? 'win' : hasDeadEnd ? 'lose' : null} 
+      <ResultModal
+        status={isComplete ? 'win' : hasDeadEnd ? 'lose' : null}
         reason={isComplete ? "All regions have been harmonized without conflict." : "A frequency collision has occurred. The matrix is unstable."}
         onRestart={resetGame}
       />

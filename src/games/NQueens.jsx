@@ -1,34 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { topNRandom, AgentLogPanel, StatusBanner, WarningPopup, SessionStats, ResultModal } from '../components';
-import { MousePointer2, Bot, Lightbulb } from 'lucide-react';
+import { topNRandom } from '../utils';
+import { AgentLogPanel, StatusBanner, WarningPopup, SessionStats, ResultModal } from '../components';
+import { Bot, Lightbulb } from 'lucide-react';
 
 export default function NQueens() {
   const [size, setSize] = useState(4);
-  const [board, setBoard] = useState(Array(size).fill(null)); 
+  const [board, setBoard] = useState(Array(size).fill(null));
   const [mode, setMode] = useState('manual');
   const [agentLogs, setAgentLogs] = useState(null);
   const [isAuto, setIsAuto] = useState(false);
   const [warningMsg, setWarningMsg] = useState('');
   const [stats, setStats] = useState({ wins: 0, losses: 0, draws: 0 });
 
-  useEffect(() => { resetGame(); }, [size]);
-  
-  const isValid = (squares, row, col) => {
-    for (let i = 0; i < row; i++) {
-        const prevCol = squares[i];
-        if (prevCol === col) return false;
-        if (Math.abs(prevCol - col) === Math.abs(i - row)) return false;
-    }
-    return true;
+  const handleSetSize = (n) => {
+    setSize(n);
+    setBoard(Array(n).fill(null));
+    setAgentLogs(null);
+    setIsAuto(false);
   };
 
-  const getValidCols = (squares, row) => {
+  const isValid = useCallback((squares, row, col) => {
+    for (let i = 0; i < row; i++) {
+      const prevCol = squares[i];
+      if (prevCol === col) return false;
+      if (Math.abs(prevCol - col) === Math.abs(i - row)) return false;
+    }
+    return true;
+  }, []);
+
+  const getValidCols = useCallback((squares, row) => {
     const valid = [];
     for (let c = 0; c < size; c++) {
-        if (isValid(squares, row, c)) valid.push(c);
+      if (isValid(squares, row, c)) valid.push(c);
     }
     return valid;
-  };
+  }, [size, isValid]);
 
   const calculateAgentMoves = useCallback(() => {
     const row = board.findIndex(v => v === null);
@@ -42,12 +48,12 @@ export default function NQueens() {
       testBoard[row] = col;
       // Heuristic: LCV - Pick column that leaves most future rows options
       let score = 0;
-      if (row < size - 1) score = getValidCols(testBoard, row + 1).length; 
+      if (row < size - 1) score = getValidCols(testBoard, row + 1).length;
       return { move: { row, col }, score };
     });
 
     return topNRandom(scoredMoves, 5);
-  }, [board, size]);
+  }, [board, size, getValidCols]);
 
   const performAgentMove = useCallback(() => {
     if (!board.includes(null)) { setIsAuto(false); return; }
@@ -58,6 +64,7 @@ export default function NQueens() {
       setBoard(prev => {
         const next = [...prev];
         next[row] = col;
+        if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
         return next;
       });
     } else {
@@ -66,9 +73,7 @@ export default function NQueens() {
     }
   }, [calculateAgentMoves, board]);
 
-  useEffect(() => {
-    if (!board.includes(null) && board.length > 0) setStats(prev => ({ ...prev, wins: prev.wins + 1 }));
-  }, [board]);
+
 
   useEffect(() => {
     let timeout;
@@ -82,16 +87,17 @@ export default function NQueens() {
     if (mode === 'agent' || isAuto) return;
     const firstEmptyRow = board.findIndex(v => v === null);
     if (row !== firstEmptyRow) {
-        setWarningMsg(`Must place in row ${firstEmptyRow}!`);
-        return;
+      setWarningMsg(`Must place in row ${firstEmptyRow}!`);
+      return;
     }
     if (!isValid(board, row, col)) {
-        setWarningMsg("Collision! Safe zones only.");
-        return;
+      setWarningMsg("Collision! Safe zones only.");
+      return;
     }
     setBoard(prev => {
       const next = [...prev];
       next[row] = col;
+      if (!next.includes(null) && next.length > 0) setStats(s => ({ ...s, wins: s.wins + 1 }));
       return next;
     });
     setAgentLogs(null);
@@ -117,9 +123,9 @@ export default function NQueens() {
   const provideHint = () => {
     const result = calculateAgentMoves();
     if (result && result.chosen) {
-        setAgentLogs({ ...result, manualHint: true });
+      setAgentLogs({ ...result, manualHint: true });
     } else {
-        setWarningMsg("No safe moves found in current path.");
+      setWarningMsg("No safe moves found in current path.");
     }
   };
 
@@ -131,7 +137,7 @@ export default function NQueens() {
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <WarningPopup message={warningMsg} onClose={() => setWarningMsg('')} />
       <h2 className="arcade-title" style={{ marginBottom: '32px', textAlign: 'center', fontSize: '2.5rem' }}>N-Queens</h2>
-      
+
       <SessionStats stats={stats} />
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
@@ -141,17 +147,17 @@ export default function NQueens() {
         </div>
         <div style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: '16px', display: 'flex', gap: '10px' }}>
           {[4, 6, 8, 12].map(n => (
-            <button key={n} className={`btn ${size === n ? 'btn-secondary' : ''}`} onClick={() => setSize(n)}>{n}x{n}</button>
+            <button key={n} className={`btn ${size === n ? 'btn-secondary' : ''}`} onClick={() => handleSetSize(n)}>{n}x{n}</button>
           ))}
         </div>
       </div>
 
       <StatusBanner status={statusType} message={statusMsg} />
 
-      <div className="board-grid" style={{ 
+      <div className="board-grid" style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${size}, 50px)`, 
-        width: `${size * 55}px`, 
+        gridTemplateColumns: `repeat(${size}, 50px)`,
+        width: `${size * 55}px`,
         margin: '32px auto',
         padding: '10px',
         gap: '4px',
@@ -162,8 +168,8 @@ export default function NQueens() {
           const isQueen = board[r] === c;
           const isCheck = (r + c) % 2 === 0;
           return (
-            <button key={i} className="cell" onClick={() => handleCellClick(r, c)} style={{ 
-              background: isQueen ? 'rgba(59, 130, 246, 0.2)' : (isCheck ? 'rgba(255,255,255,0.03)' : 'transparent'), 
+            <button key={i} className="cell" onClick={() => handleCellClick(r, c)} style={{
+              background: isQueen ? 'rgba(59, 130, 246, 0.2)' : (isCheck ? 'rgba(255,255,255,0.03)' : 'transparent'),
               width: '50px',
               height: '50px',
               display: 'flex',
@@ -186,8 +192,8 @@ export default function NQueens() {
       {mode === 'agent' && (
         <AgentLogPanel moveResults={agentLogs} onStep={performAgentMove} onAutoSolve={() => setIsAuto(true)} isAuto={isAuto || isComplete} title="Least Constraining Matrix" />
       )}
-      <ResultModal 
-        status={isComplete ? 'win' : null} 
+      <ResultModal
+        status={isComplete ? 'win' : null}
         reason="The N-Queens interference has been resolved. Perfection attained."
         onRestart={resetGame}
       />
